@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from flask import render_template_string
 from flask import Flask
-
+from app.static.src.api.test import *
 app = Flask(__name__)
 
 
@@ -12,8 +12,6 @@ def index():
 
 # @app.route("/index")
 # def index():
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, port='8080', host='127.0.0.1')
