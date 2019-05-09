@@ -5,25 +5,24 @@
 
 import os
 import subprocess
-import time
 
 
-
-def main():   # 调用exe，但是不会输出内容到控制台
+def main():  # 调用exe，但是不会输出内容到控制台
     os.chdir(r'G:\work\iControl\Entrance Management_V2\UnitTestWeiGengSDK\bin\Debug')
     path_01 = r"UnitTestWeiGengSDK.exe"
     r_v = os.popen(path_01).read()
     print("11111", r_v)
     # return r_v
 
+
 def mainn():  # 调用exe，可以输出全部内容到控制台
     os.chdir(r'E:\work_test\iControl\Entrance Management_V2\WGDemoWin\bin\Debug')
     path_01 = r"WGDemoWin.exe"
-    s = subprocess.Popen(path_01,bufsize=0, stdout=subprocess.PIPE,universal_newlines=True)
+    s = subprocess.Popen(path_01, bufsize=0, stdout=subprocess.PIPE, universal_newlines=True)
     while True:
-        nextline=s.stdout.readline()
+        nextline = s.stdout.readline()
         print(nextline.strip())
-        if nextline=="":
+        if nextline == "":
             break
 
 
@@ -60,16 +59,21 @@ def mainn():  # 调用exe，可以输出全部内容到控制台
 #         t.start()
 
 
-a = (1,5,3,9,7)
-b = (0,2,6,4,8)
+a = (1, 5, 3, 9, 7)
+b = (0, 2, 6, 4, 8)
 for aa, bb in zip(a, b):
     print(aa, "---华丽的分割线---", bb)
 print('-------------------------')
-for aa, bb in zip(range(1,20), range(40, 20,-2)):
+for aa, bb in zip(range(1, 20), range(40, 20, -2)):
     print(aa, "---华丽的分割线---", bb)
 
+
 def add(a=1, b=1, c=1):
-    print(a+b)
+    print(a + b)
     print(c)
 
-add()
+
+add(14, 1, 20)
+
+d = 1
+print('ad"sdhalas%s"' % d)
