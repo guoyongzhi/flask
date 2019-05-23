@@ -1,6 +1,6 @@
 import threading, time, requests
 
-url = "http://www.baidu.com"
+url = "https://www.baidu.com"
 total = 0
 suc = 0
 fail = 0
@@ -45,7 +45,7 @@ class RequestThread(threading.Thread):
             else:
                 lt3 += 1
         except Exception as e:
-            # print(e)
+            print(e.message)
             total += 1
             exception += 1
 
@@ -63,21 +63,23 @@ class RequestThread(threading.Thread):
 
 print('===========请求开始===========')
 start_time = time.time()
-thread_count = 1600
-i = 0
+thread_count = 5000
+i = b = 0
 while i <= thread_count:
     try:
         t = RequestThread("线程：" + str(i))
         t.start()
         i += 1
     except RuntimeError:
-        break
-
-print("最大线程是：", i)
+        time.sleep(5)
+        b += 1
+        print("等待次数", b)
+        print("本次最大线程是：", i)
 t = 0
 while total < thread_count | t > 1:
-    # print("总数:%d,成功数:%d,失败:%d,异常:%d\n" % (total, suc, fail, exception))
+    print("总数:%d,成功数:%d,失败:%d,异常:%d\n" % (total, suc, fail, exception))
     # print(url)
+    print(t)
     t += 1
     time.sleep(1)
 print('===========task end===========')

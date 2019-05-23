@@ -41,17 +41,17 @@ def get_fenli(filename):
 
 
 
-jia = 4
-yi = 5
-c = 18
-bin = 45
-bi = 0
-for i in range(0, 60):
-    # print(i)
-    if c == 0.0:
-        print(i, c, bi)
-    else:
-        r = int(c) / 50
-        c = c - (r * jia + r * yi)
-        bi += int(r * 45)
-        print(r, c, bi)
+# jia = 4
+# yi = 5
+# c = 18
+# bin = 45
+# bi = 0
+# for i in range(0, 60):
+#     # print(i)
+#     if c == 0.0:
+#         print(i, c, bi)
+#     else:
+#         r = int(c) / 50
+#         c = c - (r * jia + r * yi)
+#         bi += int(r * 45)
+#         print(r, c, bi)
