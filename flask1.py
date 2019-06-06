@@ -1,23 +1,19 @@
-from flask import Flask, render_template, request
-from flask import render_template_string
-from flask import Flask
-# from app.static.src.api.test import *
-app = Flask(__name__)
+import sqlite3
 
+conn = sqlite3.connect('dbdate')
+c = conn.cursor()
+print("Opened database successfully")
 
-@app.route('/')
-def index():
-    return render_template("index.html")
-    # return 'Hello World!'
+# c.execute("alter table COMPANY t_app modify column ID int(5) auto_increment;")
+# c.execute("INSERT INTO COMPANY (NAME,AGE,ADDRESS,SALARY) \
+#       VALUES ('Paull', 13, 'California', 20000.00 )")
+# cursor = c.execute("SELECT id, name, address, salary  from COMPANY")
+# for row in cursor:
+#    print("ID = ", row[0])
+#    print("NAME = ", row[1])
+#    print("ADDRESS = ", row[2])
+#    print("SALARY = ", row[3], "\n")
 
-# @app.route("/index")
-# def index():
+print("Operation done successfully")
 
-# if __name__ == '__main__':
-#     app.run(debug=True, port='8080', host='192.168.11.29')
-# def hello_world():
-#     return 'Hello World!'
-#
-#
-if __name__ == '__main__':
-    app.run()
+conn.close()
