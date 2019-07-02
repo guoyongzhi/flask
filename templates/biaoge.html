@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/js/jquery-1.7.2.min.js"></script>
+    <script src="http://pv.sohu.com/cityjson?ie=utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/media/css/jquery.dataTables.css">
+    <script src="/static/media/js/jquery.dataTables.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#divTabBranInfoList").append('<table id="tabInfo" class="table table-striped table-bordered table-hover" width="100%">\n' +
+                    '        <thead>\n' +
+                    '        <tr>\n' +
+                    '            <th width="15%"><input id="checkAll" class="checkAll" type="checkbox" value=""></th>\n' +
+                    '            <th width="25%" id="th_prevent" >repo</th>\n' +
+                    '            <th width="25%" id="th_exemptions">exemption</th>\n' +
+                    '            <th width="15%" id="th_action" >action</th>\n' +
+                    '        </tr>\n' +
+                    '        </thead>\n' +
+                    '        <tbody style="font-size: 14px">\n' +
+                    '        </tbody>\n' +
+                    '    </table>');
+
+            $("#tabInfo").DataTable({
+                "fixedHeader": true,
+                "stateSave": true,
+                "searching" : true,
+                "ordering": true,
+                "destroy" : true,
+                "processing": true,
+                "bAutoWidth": true, //自动宽度
+                "serverSide": false,//服务器端分页
+                "columns": [{"data": "select"}, {"data": "id"}, {"data": "name"}, {"data": null,
+                "render": function(data, type, row, meta){
+                    var id = '"' + row.id + '"';
+                    var html = "<a href='javascript:void(0);'  class='delete btn btn-default btn-xs'  ><i class='fa fa-times'></i> 查看</a>"
+                    html += "<a href='javascript:void(0);' class='up btn btn-default btn-xs'><i class='fa fa-arrow-up'></i> 编辑</a>"
+                    html += "<a href='javascript:void(0);'   onclick='deleteThisRowPapser("+ id + ")'  class='down btn btn-default btn-xs'><i class='fa fa-arrow-down'></i> 删除</a>"
+                    return html;
+                }}],
+                "aLengthMenu": [10, 20, 30, 40],
+                "iDisplayLength": 10,
+                "aoColumnDefs": [{
+                    "sClass": "text-center",
+                    "targets": [1, 2]
+                }, {
+                    "bSortable": false,
+                    "aTargets": [1, 3]
+                }, {
+                    "render": function (data, type) {
+                        return "<div align='center'><input type='checkbox' onclick = childclick() name='ckb-jobid' value=''" + data + "></div>";
+                    },
+                    "aTargets": 0 //最后一列
+                }
+                ],
+                "fnDrawCallback": function () {
+                    $(this).find('thead input[type=checkbox]').removeAttr('checked');
+                },
+                "ajax": {
+                    type: "POST",
+                    url: "/passport",
+                    data: {},
+                    error: function () {
+                        alertError("Get Repo Branch List Error!");
+                    },
+                    dataSrc: function (json) {
+                        json.draw = json.data.draw;
+                        json.recordsTotal = json.data.recordsTotal;
+                        json.recordsFiltered = json.data.recordsFiltered;
+                        return json.data;
+                    }
+                },
+                language : {
+                    "processing" : "处理中...",
+                    "lengthMenu" : "显示 _MENU_ 项结果",
+                    "zeroRecords" : "没有匹配结果",
+                    "info" : "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                    "infoEmpty" : "显示第 0 至 0 项结果，共 0 项",
+                    "infoFiltered" : "(由 _MAX_ 项结果过滤)",
+                    "infoPostFix" : "",
+                    "search" : "搜索:",
+                    "url" : "",
+                    "emptyTable" : "没有数据",
+                    "loadingRecords" : "载入中...",
+                    "infoThousands" : "20",
+                    "paginate" : {
+                        "first" : "首页",
+                        "previous" : "上页",
+                        "next" : "下页",
+                        "last" : "末页"
+                    }
+                }
+            });
+            $('#checkAll').on('click', function () {
+                if (this.checked) {
+                    $(this).attr('checked','checked');
+                    $("input[name='ckb-jobid']").each(function () {
+                        this.checked = true;
+                    });
+                } else {
+                    $(this).removeAttr('checked');
+                    $("input[name='ckb-jobid']").each(function () {
+                        this.checked = false;
+                    });
+                }
+            });
+        })</script>
+</head>
+<body>
+    <div id="divTabBranInfoList"></div>
+</body>
+</html>

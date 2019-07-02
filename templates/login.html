@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <script src="/static/js/jquery-1.7.2.js"></script>
+    <script src="/static/js/jsencrypt/jsencrypt.min.js"></script>
+    <script src="/static/js/toastr/toastr.min.js"></script>
+    <link href="/static/js/toastr/toastr.min.css" rel="stylesheet">
+</head>
+<body>
+    <form action="/login" method="POST" style="width:500px;float:none;margin:0 auto;" >
+        <label for="pubkey" style="visibility: hidden"></label>
+                <textarea id="pubkey" style="visibility: hidden">{{ public_key }}</textarea><br/>
+         <label for="username" style="font-size:18px" >用户名：</label>
+         <div style="height:35px;width:400px;position:relative;display:inline" >   <!--相关位置--> <!--此处为相关位置与绝对位置联合使用-->
+             <input id="username" type="text" placeholder="请输入用户名" style="height:30px;width:350px;padding-right:50px;" />
+         </div>
+         <br/>
+         <br/>
+         <label for="password1" style="font-size:18px" >&nbsp密码：</label>
+         <div style="height:35px;width:400px;position:relative;display:inline" >   <!--相关位置--> <!--此处为相关位置与绝对位置联合使用-->
+             <input id="pwd" type="password" placeholder="请输入密码" style="height:30px;width:350px;padding-right:50px;" />
+         </div>
+         <br/>
+{#         <br/>#}
+{#         <label for="verification_code" style="font-size:18px" >验证码：</label>#}
+{#         <input id="verification_code" type="text" style="height:30px;width:350px;">#}
+{#         <br/>#}
+         <br/>
+         <div style="width:426px;float: right;">
+             <input type="checkbox" name="auto_login" value=""/> 自动登录
+             <a herf="找回密码网址">忘记密码？</a>
+             <a href="/regist">注册</a>
+         </div>
+         <br/>
+         <br/>
+         <div style="width:426px;float: right;">
+             <button type="button" value="登录" style="height:50px;width:400px;background-color:#468068;">登录</button>
+             <img alt="" class="gif"/>
+             <div class="alert" style="color: red; text-align: center"></div>
+         </div>
+    </form>
+    <script>
+        $(document).ready(function(){
+            $("input").focus(function(){
+                $(this).css("background-color","#cccccc");
+            });
+            $("input").blur(function(){
+                $(this).css("background-color","#ffffff");
+            });
+        });
+        $(document).ready(function() {
+            var isClick = true;
+            var messageOpts = {
+                "closeButton": true,
+                "debug": false,
+                "positionClass": "toast-top-center",
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+            toastr.options = messageOpts;
+            $("button").click(function () {
+                var encrypt = new JSEncrypt();
+                var pkey = $('#pubkey').val();
+                var userValue = $("#username").val();
+                var pwdValue = $("#pwd").val();
+                if (userValue.length == 0) {
+                    $('.gif').css('display', 'none');
+                        username.focus();
+                        return false;
+                    }
+                if (pwdValue.length == 0) {
+                    $('.gif').css('display', 'none');
+                        pwd.focus();
+                        return false;
+                }
+                if(isClick){
+                    isClick = false;
+                    var date = {};
+                    date.username = userValue;
+                    encrypt.setPublicKey(pkey);
+                    date.pass = encrypt.encrypt(pwdValue);
+                    console.log(date);
+                    $.post("/login", date, function (restul) {
+                        if (restul == null)
+                            return;
+                        if (restul["msg_code"] != 200) {
+                            $('.gif').css('display', 'none');
+                            $(".formtip").remove();
+                            var errorMsg = restul["msg"];
+                            $('.alert').append('<span class="formtip onError a">' + errorMsg + '</span>');
+                            return;
+                        }
+                        window.top.location.href = restul.result;
+                    }, "json");
+                    setTimeout(function(){
+                        isClick = true;
+                    }, 3000);
+                    return false;
+                }
+                else {
+                    toastr.warning('您点的太快了，请3秒后再试！');
+                }
+            });
+        });
+        $(document).ready(function () {
+            $(this).keydown(function (event) {
+                if (event.keyCode == 13) {
+                    $('#btnLogin').click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

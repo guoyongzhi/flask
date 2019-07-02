@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8"/>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="https://cdn.bootcss.com/toastr.js/latest/js/toastr.min.js"></script>
+<link href="https://cdn.bootcss.com/toastr.js/latest/css/toastr.min.css" rel="stylesheet">
+
+<script type="text/javascript">
+//美化版彈窗
+$(function(){
+         var messageOpts = {
+        "closeButton": true,
+        "debug": false,
+        "positionClass": "toast-top-center",
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+        };
+        toastr.options = messageOpts;
+        $('#showtoast').click(function() {
+
+            //提示
+            //调用方法1
+            toastr.info('内容1');
+            //调用方法2
+            //toastr.info('内容2', '标题2');
+            //调用方法3
+            //toastr['info']('内容3', '标题3');
+            //调用方法4
+            //toastr.info('内容4', '标题4',messageOpts);
+        });
+
+        $('#showtoastsuccess').click(function() {
+            //成功
+            toastr.success('内容success', '标题success');
+        });
+
+        $('#showtoasterror').click(function() {
+            //错误
+            toastr.error('内容error', '标题error');
+        });
+        $('#showtoastwarning').click(function() {
+            //警告
+            toastr.warning('内容warning', '标题warning');
+        });
+})
+
+</script>
+</head>
+
+<body>
+<button id="showtoast" style="text-align: center">show info toast（提示）</button>
+<br>
+<button id="showtoastsuccess">show success toast（成功）</button>
+<br>
+<button id="showtoasterror">show error toast（错误）</button>
+<br>
+<button id="showtoastwarning">show warning toast（警告）</button>
+</body>
+</html>
