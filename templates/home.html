@@ -10,9 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
     <link rel="shortcut" href="/static/images/favicon.ico" type="image/x-ico">
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
-    <script src="/static/js/jquery-1.7.2.min.js"></script>
-	<script src="/static/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://127.1.1.1:8099/static/css/bootstrap.min.css">
+    <script src="http://127.1.1.1:8099/static/js/jquery-1.7.2.min.js"></script>
+	<script src="http://127.1.1.1:8099/static/js/bootstrap.min.js"></script>
     <style>
         .search input{
             line-height: 116px;
@@ -52,58 +52,61 @@
 </head>
 <body>
     <!-- 头部 -->
-    <div class="container logo-search">
-        <div class="row">
-            <div class="col logo">
-                <h1>
-                    <a href="/">嘉隆苑--欢迎您！</a>
-                </h1>
-            </div>
-            <div class="col right-list"></div>
-            <div class="col search search-desktop last">
-                <form action="" target="_blank">
-                    <input class="placeholder" id="s" placeholder="搜索......." name="s" autocomplete="off">
-                </form>
-            </div>
+    <form class="layui-form" action="">
+        <div class="layui-form-item proSelect">
+             <label class="layui-form-label">产品类别</label>
+              <div class="layui-input-block editWidth">
+                  <select name="productList" lay-verify="required" id="zcySelect">
+                      <option value=""></option>
+                      <option value="0">轻松融</option>
+                      <option value="1">容易融</option>
+                      <option value="2">快乐融</option>
+                  </select>
+              </div>
+         </div>
+         <a class="layui-btn layui-btn-small" id="" onclick="addProductClassify()">增加产品类别</a>
+    </form>
+    <!--弹窗内容-->
+    <div id="select_prod" class="layui-form" hidden="hidden">
+        <div class="layui-input-inline">
+            <input type="text" name="text" required lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
         </div>
     </div>
-    <!-- 导航栏 -->
-    <div class="container navigation">
-        <div class="navv">
-            <div class=" navv">
-                <ul id="index-nav">
-                    <li><a href="">首页</a></li>
-                    <li><a href="">人物简介</a></li>
-                    <li><a href="">解决方案</a></li>
-                    <li><a href="">实时新闻</a></li>
-                    <li><a href="">周边动态</a></li>
-                    <li><a href="">招贤纳才</a></li>
-                    <li><a href="">联系我们</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="col-md">
-        <div class="col-md-4">
-            <p></p>
-        </div>
-        <div class="col-md-4 text-center">
-            <p class="text-center">正在拼命开发中……</p>
-        </div>
-        <div class="col-md-4"><p></p></div>
-    </div>
-    <br>
-    <br>
-    <div class="text-center" style="height:30px;width:600px;padding-right: 10px;">
-        <div style="font-size:18px">
-            其他快捷路径路径：
-            <ul style="text-indent: 87px">登录:<a href="/login">当前网站路径 + /login</a></ul>
-            <ul style="text-indent: 88px">注册:<a href="/regist">当前网站路径 + /regist</a></ul>
-            <ul style="text-indent: 192px">框架首页:<a href="/page/admin/login">当前网站路径 + /page/admin/login</a></ul>
-            <ul style="text-indent: 96px">表格:<a href="/biaoge">当前网站路径 + /biaoge</a></ul>
-            <ul style="text-indent: 170px">上传文件功能:<a href="/upload">当前网站路径 + /upload</a></ul>
-            <ul style="text-indent: 137px">流星雨背景:<a href="/code">当前网站路径 + /code</a></ul>
-        </div>
-    </div>
+<script>
+    //重新渲染表单
+function renderForm(){
+  layui.use('form', function(){
+   var form = layui.form();//高版本建议把括号去掉，有的低版本，需要加()
+   form.render();
+  });
+ }
+//增加产品类别按钮点击事件
+function addProductClassify(){
+    layer.open({
+        type:1,
+        btn:['确定','取消'],
+        content:$("#select_prod"),
+        area:['270px','160px'],
+        //当前层索引参数（index）、当前层的DOM对象（layero）
+        yes:function(index,layero){
+            //获取input输入的值
+            var ivalue=$(layero).find("input").val();
+            //获取要添加的option的索引
+            var sIndex=$("#zcySelect")[0].options.length-1;
+            if(ivalue==null||ivalue==''){
+                layer.msg("请输入产品类别")
+            }
+            else{
+                layer.msg("输入的产品类别是："+ivalue);
+                //为select添加option
+                $("#zcySelect").append("<option value="+sIndex+">"+ivalue+"</option>");
+                renderForm();//表单重新渲染，要不然添加完显示不出来新的option
+                layer.close(index);
+            }
+            $(layero).find("input").val('');
+        }
+    })
+}
+</script>
 </body>
 </html>

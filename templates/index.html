@@ -2,9 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>欢迎</title>
+    <title>测试用例编写</title>
 </head>
 <body>
-        <a>你好啊</a>
+{#    <script src="https://www.tengoyz.com/static/js/jquery-1.7.2.min.js"></script>#}
+{#    <script src="https://www.tengoyz.com/static/js/jquery-1.7.2.js"></script>#}
+    <div>
+        <form id="ssss" action="/" method="post">
+            <label class="" for="cb"><span>是否启用该功能：</span></label>
+            <input id="cb" name="cb" type="checkbox" value="1">
+            <input id="add" type="hidden" name="city">
+            <br>
+            <label class="" for="cb"><span>是否启用该功能：</span></label>
+            <input id="db" name="db" type="checkbox" value="1">
+            <input id="addr" type="hidden" name="city">
+            <br>
+            <input id="addrs" type="submit" value="提交">
+        </form>
+    </div>
+    <script type="application/javascript">
+        $("#cb").click(function(){
+            obj = $("#add");
+            console.log($(this).is(":checked"));
+            if($(this).is(":checked")){
+                select = $('<select id="id"></select>');
+                var options = '<option class="mm">--请选择--</option>';
+                select.append(options);
+                obj.after(select);
+                //alert("勾选了");
+            }else {
+                if($("#id")){
+                    $("#id").remove()
+                }
+                //alert("取消勾选了")
+            }
+            //{#console.log($("#cb").prop("checked"));#}
+            //{#console.log($("#cb").get(0).checked);#}
+        });
+        $("#db").click(function(){
+            obj = $("#addr");
+            console.log($(this).is(":checked"));
+            if($(this).is(":checked")){
+                select = $('<select id="tid"></select>');
+                var options = '<option class="mm">--请选择--</option>';
+                select.append(options);
+                obj.after(select);
+                //alert("勾选了");
+            }else {
+                if($("#addr")){
+                    $("#tid").remove()
+                }
+                //alert("取消勾选了")
+            }
+            //{#console.log($("#cb").prop("checked"));#}
+            //{#console.log($("#cb").get(0).checked);#}
+        })
+    </script>
 </body>
 </html>

@@ -107,7 +107,7 @@ class mubot(object):
         infp = open(self.path, 'r', encoding='utf-8')
         outfp = open('alll.txt', 'w', encoding='utf-8')
         lines = infp.readlines()
-        for li in lines:
+        for a, li in range(len(lines)), lines:
             if li.split():
                 outfp.writelines(li)
         infp.close()
@@ -115,5 +115,5 @@ class mubot(object):
 
 
 # mubot().get_zhang()
-# mubot().delbialline()
-mubot().get_len("最佳赘婿", "第902章")
+mubot().delbialline()
+# mubot().get_len("最佳赘婿", "第902章")
