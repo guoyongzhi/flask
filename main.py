@@ -75,7 +75,8 @@ def home():
 
 @app.route('/test')
 def test():
-    return 'test'
+    IP = request.values.ip
+    return 'test' + IP
 
 
 @app.route('/biaoge')
