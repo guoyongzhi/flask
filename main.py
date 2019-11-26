@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # coding=utf-8
-# Author: yannanxiu
 
 import os
 from flask import *
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import PKCS1_OAEP, PKCS1_v1_5
+from static.src.apip import ap_new
 import base64
 from urllib import parse
 from axf.dbmysql import my_db
@@ -16,27 +16,25 @@ private_key_file = os.path.join(curr_dir, "my_private_rsa_key.bin")
 public_key_file = os.path.join(curr_dir, "my_rsa_public.pem")
 
 app = Flask(__name__)
+ap_new(app)
 
 
 def decrypt_data(inputdata, code="123456"):
     # URLDecode
     data = parse.unquote(inputdata)
-
+    
     # base64decode
     data = base64.b64decode(data)
-
-    private_key = RSA.import_key(
-        open(curr_dir + "/my_private_rsa_key.bin").read(),
-        passphrase=code
-    )
+    
+    private_key = RSA.import_key(open(curr_dir + "/my_private_rsa_key.bin").read(), passphrase=code)
     # 使用 PKCS1_v1_5，不要用 PKCS1_OAEP
     # 使用 PKCS1_OAEP 的话，前端 jsencrypt.js 加密的数据解密不了
     cipher_rsa = PKCS1_v1_5.new(private_key)
-
+    
     # 当解密失败，会返回 sentinel
     sentinel = None
     ret = cipher_rsa.decrypt(data, sentinel)
-
+    
     return ret
 
 
@@ -89,16 +87,17 @@ def biaoge():
 def get_user():
     id = request.values.get('user_id')
     if id:
-        sql = 'select id,show_name from passport_20180612 where id=%d' % int(id)
+        sql = 'select id,show_name,default_name,phone_number,sex from passport_20180612 where id=%d' % int(id)
     else:
-        sql = 'select id,show_name from passport_20180612'
+        sql = 'select id,show_name,default_name,phone_number,sex from passport_20180612'
     res = my_db(sql, 'passport')
     list = []
     for i in res:
-        lis = dict(id=i[0], name=i[1])
+        lis = dict(id=i[0], name=i[1], default_name=i[2], phone_number=i[3], sex=i[4])
         list.append(lis)
     re = dict(msg='请求成功', code=200, data=list, tot=len(res), sEcho=1, iTotalRecords=1, iTotalDisplayRecords=1)
     return json.dumps(re, ensure_ascii=False)
+
 
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
@@ -145,5 +144,5 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 #     return render_template('crypto-js.js')
 if __name__ == '__main__':
     app.debug = True
+    app.threaded = True
     app.run()
-
