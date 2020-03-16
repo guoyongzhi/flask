@@ -36,3 +36,29 @@ def ap_new(app):
         aa = request.values.get('id')
         create_thread(aa)
         return "11"
+
+
+executor = ThreadPoolExecutor(2)
+
+
+def ss():
+    for i in range(10):
+        time.sleep(5)
+        print(i)
+    return 'OK'
+
+
+def show():
+    executor.submit(ss)
+    time.sleep(1)
+    print("程序已启动")
+
+
+# def show():
+#     print(list(show_str()))
+#     print('*****')
+
+
+if __name__ == '__main__':
+    show()
+    print('main')
