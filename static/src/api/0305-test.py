@@ -21,3 +21,5 @@ print(list)
 
 a = float(1+0.1)
 print(a)
+
+print(random.randint(0, 10))

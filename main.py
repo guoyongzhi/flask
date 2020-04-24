@@ -5,10 +5,22 @@ import os
 from flask import *
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import PKCS1_OAEP, PKCS1_v1_5
-from static.src.apip import ap_new
+from static.src.apip import *
 import base64
 from urllib import parse
 from axf.dbmysql import my_db
+# from flask_cache import Cache
+from flask_caching import Cache
+from werkzeug.contrib.cache import MemcachedCache
+# from extensions import cache
+# from setting import Config
+
+# app.config.from_object(Config)
+# from flask_socketio import SocketIO, emit
+from threading import Lock
+import random
+
+async_mode = None
 
 # 获取当前路径
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -16,7 +28,11 @@ private_key_file = os.path.join(curr_dir, "my_private_rsa_key.bin")
 public_key_file = os.path.join(curr_dir, "my_rsa_public.pem")
 
 app = Flask(__name__)
-ap_new(app)
+cache = Cache()
+# cache.config = 'simple'
+# ap_new(app)
+app.register_blueprint(apnew)
+cache.init_app(app=app, config={"CACHE_TYPE": "simple"})
 
 
 def decrypt_data(inputdata, code="123456"):
@@ -74,9 +90,15 @@ def home():
 
 
 @app.route('/test')
+@cache.memoize(timeout=10, )
 def test():
+    print("是否走缓存了！")
     IP = request.values.ip
+    # cache = MemcachedCache(['127.0.0.1:5000'])
     return 'test' + IP
+
+
+# cached_test = test()
 
 
 @app.route('/biaoge')
@@ -100,50 +122,58 @@ def get_user():
     return json.dumps(re, ensure_ascii=False)
 
 
+@app.route('/test-conn')
+def get_test_conn():
+    return render_template('testconn.html')
+
+
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
-# @app.route('/', methods=["GET", "POST"])
-# def rsa():
-#     public_key = None
-#     if "GET" == request.method:
-#         with open(public_key_file) as file:
-#             public_key = file.read()
-#     elif request.method == "POST":
-#         username = request.values.get("username")
-#         password = request.values.get("passwd")
-#         current_app.logger.debug("username:" + username + "\n" + "password:" + password)
-#         print("username:" + username + "\n" + "password:" + password)
-#
-#         # decrypt
-#         username_ret = decrypt_data(username)
-#         password_ret = decrypt_data(password)
-#         if username_ret and password_ret:
-#             current_app.logger.debug(username_ret.decode() + " " + password_ret.decode())
-#             print(username_ret.decode() + " " + password_ret.decode())
-#             return 'OK'
-#
-#     return render_template("rsa_view.html", public_key=public_key)
+# app.config['SECRET_KEY'] = 'secret!'
+# socketio = SocketIO(app)
+# thread = None
+# thread_lock = Lock()
 #
 #
-# @app.route('/js_rsa_test', methods=["GET", "POST"])
-# def js_rsa_test():
-#     return render_template("js_rsa_test.html")
+# @socketio.on('connect', namespace='/conn')
+# def test_connect():
+#     global thread
+#     with thread_lock:
+#         if thread is None:
+#             thread = socketio.start_background_task(target=background_thread)
 #
 #
-# @app.route('/ase.js')
-# def get_ase():
-#     return render_template('ase.js')
+# @socketio.on('message')
+# def handle_message(message):
+#     print('received message: ' + message)
 #
 #
-# @app.route('/tot')
-# def tot():
-#     return render_template('tot.html')
+# def background_thread():
+#     while True:
+#         socketio.sleep(10)  # 心跳五秒一次
+#         # t = random.randint(1, 100)
+#         date = dict(evenType=0, msg={"result": 'null'})
+#         print(date)
+#         socketio.emit('response', {'data': date}, namespace='/conn')
 #
 #
-# @app.route('/templates/crypto-js.js')
-# def get_js():
-#     return render_template('crypto-js.js')
+# @app.route('/send')
+# def send_msg():
+#     evenType = request.values.get('evenType')
+#     msg = request.values.get('msg')
+#     date = dict(evenType=evenType, msg={"result": msg})
+#     socketio.emit('response', {'data': date}, namespace='/conn', broadcast=True)
+#     re = dict(code=200, msg='OK', result='null')
+#     return json.dumps(re, ensure_ascii=False)
+#
+#
+# def comm_send_msg(a=0, b=None):
+#     date = dict(evenType=a, msg={"result": b})
+#     socketio.emit('response', {'data': date}, namespace='/conn', broadcast=True)
+#     return 'OK'
+
+
 if __name__ == '__main__':
-    app.debug = True
+    app.debug = False
     app.threaded = True
-    app.run()
+    app.run()  # socketio.run(app, host='192.168.11.103', port=5000, debug=True)

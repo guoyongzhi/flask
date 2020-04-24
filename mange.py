@@ -6,6 +6,7 @@ from uuid import uuid4
 
 # from baidu_asr_and_synthesis import new_asr, new_synthesis
 # from simple_questions_answers import question_answer
+from static.aip.new_asr import *
 
 app = Flask(__name__)  # type:Flask
 

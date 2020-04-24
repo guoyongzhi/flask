@@ -1,8 +1,14 @@
 # coding:utf-8
+import socketio
 from flask import *
 import time
+import requests as req
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
+# from flask_socketio import SocketIO, emit
+# from Main import comm_send_msg
+
+apnew = Blueprint('apnew', __name__)
 
 
 def gg_th(id=5):
@@ -22,20 +28,37 @@ def create_thread(aa):
     return pool
 
 
-def ap_new(app):
-    @app.route('/tt', methods=['GET', 'POST'])
-    def tt():
-        aa = stratr()
-        if aa == 'OK':
-            return "test"
-        else:
-            return "ERROR"
-    
-    @app.route('/th', methods=['GET', 'POST'])
-    def th():
-        aa = request.values.get('id')
-        create_thread(aa)
-        return "11"
+@apnew.route('/tt', methods=['GET', 'POST'])
+def tt():
+    aa = stratr()
+    if aa == 'OK':
+        return "test"
+    else:
+        return "ERROR"
+
+
+@apnew.route('/th', methods=['GET', 'POST'])
+def th():
+    aa = request.values.get('id')
+    create_thread(aa)
+    return "11"
+
+
+# apnew.config['SECRET_KEY'] = 'secret!'
+# socketio = SocketIO(apnew)
+
+
+@apnew.route('/tth', methods=['GET', 'POST'])
+def thh():
+    aa = request.values.get('id')
+    msg = dict(result=aa)
+    date = dict(evenType=2, msg=msg)
+    # socketio.emit('response', {'data': date}, namespace='/conn', broadcast=True)
+    re = dict(code=200, msg='OK', result='null')
+    # comm_send_msg(a=2, b=date)
+    # res = req.get(url='http://192.168.11.103:5000/send', params=json.dumps(date))
+    # print(res.text)
+    return json.dumps(re)
 
 
 executor = ThreadPoolExecutor(2)

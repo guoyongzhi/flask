@@ -1,5 +1,7 @@
 from enum import Enum, unique
 
+Month = Enum('Month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+
 
 @unique
 class Weekday(Enum):
@@ -12,8 +14,15 @@ class Weekday(Enum):
     Sat = 6
 
 
+for member in Month:
+    print(member.name, member.value)
+
+for name, member in Month.__members__.items():
+    print(name, '=>', member, ',', member.value)
+
 print(Weekday.Tue)  # Weekday.Tue
 print(Weekday['Tue'])  # Weekday.Tue
 print(Weekday.Tue.value)  # 2
 print(Weekday(1))  # Weekday.Mon
+
 
