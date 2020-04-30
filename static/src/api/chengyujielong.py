@@ -38,7 +38,6 @@ def idiom_next_char(idiom, polyphone=False):
     else:
         last = idiom[len(idiom) - 1]
         if polyphone:
-            pass
             if last not in idiom_char_dic:
                 res = idiom + ' 这不是个成语哦'
             else:
@@ -132,7 +131,7 @@ def chengyujielong(s='', name=''):
         dict[name] = nn, users_list
         return current_word
     try:
-        if dict[name]:
+        if name in dict:
             new = dict[name]
             # print(new, type(new))
             # nn_list = new.split(',')
@@ -191,15 +190,18 @@ def chengyujielong(s='', name=''):
         else:  # 直接说成语开始成语接龙
             users_list = []
             res_list = idiom_next_char(s, polyphone=True)
-            if res_list == s + ' 这不是个成语哦':
-                return s + ' 这不是个成语哦'
+            if res_list:
+                if type(res_list) is list:
+                    nn = res_list[random.randint(0, len(res_list) - 1)]
+                    users_list.append(nn)
+                    dict[name] = nn, users_list
+                    return nn
+                else:
+                    return ''
             else:
-                nn = res_list[random.randint(0, len(res_list) - 1)]
-                users_list.append(nn)
-                dict[name] = nn, users_list
-                return nn
+                return ''
     except Exception as e:
-        print(e)
+        print('成语接龙抱错', s, name, e)
 
 
 # chengyujielong('', 'zufeng')
