@@ -1,5 +1,6 @@
 from locust import HttpLocust, task, TaskSet
 import json
+import selenium
 
 
 class BestTest(TaskSet):

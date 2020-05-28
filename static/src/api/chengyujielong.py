@@ -155,17 +155,17 @@ def chengyujielong(s='', name=''):
                 shou = s[:1]
                 shou2 = lazy_pinyin(shou)
                 if wei2 != shou2:
-                    return '亲！回答不正确哦~'
+                    return '亲！回答不正确哦~ 当前成语：' + nn
                 else:
                     if s not in idiom_list:
-                        res = s + ' 这不是一个成语哦'
+                        res = s + ' 这不是一个成语哦~ 当前成语：' + nn
                         return res
                     else:
                         if s not in users_list:
                             try:
                                 res_list = idiom_next_char(s, polyphone=True)
                                 if s + ' 这不是一个成语哦' == res_list:
-                                    return s + ' 这不是一个成语哦'
+                                    return s + ' 这不是一个成语哦~ 当前成语：' + nn
                                 else:
                                     for i in res_list:
                                         if users_list:
@@ -186,7 +186,7 @@ def chengyujielong(s='', name=''):
                                 dict[name] = nn, users_list
                                 return u'接龙:是在下输了! 重新开始吧：' + nn
                         else:
-                            return '亲，该词说过了，换个试试吧！'
+                            return '亲，该词说过了，换个试试吧！ 当前成语：' + nn
         else:  # 直接说成语开始成语接龙
             users_list = []
             res_list = idiom_next_char(s, polyphone=True)
