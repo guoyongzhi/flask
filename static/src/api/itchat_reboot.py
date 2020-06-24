@@ -145,6 +145,7 @@ def text_reply(msg):  # 处理私人消息
 
 gamedict = dict()
 pai = 0
+this_num = 0
 qun_list = []
 chengyu_list = []
 hongbao_list = []
@@ -153,7 +154,7 @@ hongbao_list = []
 @itchat.msg_register(itchat.content.TEXT, isGroupChat=True)  # 群消息（群游戏）
 def text_reply(msg):  # 处理群消息
     global pai
-    nn = ''
+    global this_num
     talk = msg['Content']
     this = msg['User']['Self']['DisplayName']
     qname = msg['User']['NickName']
@@ -228,12 +229,12 @@ def text_reply(msg):  # 处理群消息
                 except Exception as e:
                     print(e, msg)
                     talk = ''
-                print(whotalk + '@' + who, talk)
+                # print(whotalk + '@' + who, talk)
                 if who == this:
                     if '菜单' in talk or '帮助' in talk or 'help' in talk:
-                        with open('help.txt', encoding='utf-8') as f:
-                            aa = f.readlines()
-                        f.close()
+                        # with open('help.txt', encoding='utf-8') as f:
+                        #     aa = f.readlines()
+                        # f.close()
                         return "自己看看吧，是不是多到眼花\n机器人聊天    成语接龙\n群签到    打劫游戏\n点歌    \n其他功能正在努力开发中"
                     elif '聊天菜单' in talk or '聊天帮助' in talk or '聊天help' in talk:
                         return "@" + whotalk + ': 开始艾特我回复：' + '开始聊天  或  开启聊天  或  机器人聊天\n结束回复：结束聊天  或  关闭聊天  或  不聊了。'
@@ -242,7 +243,7 @@ def text_reply(msg):  # 处理群消息
                     elif '签到菜单' in talk or '签到帮助' in talk or '签到help' in talk:
                         return "@" + whotalk + ': 开始艾特我回复：签到 '
                     elif '抢劫菜单' in talk or '抢劫帮助' in talk or '抢劫help' in talk:
-                        return "@" + whotalk + ': 开始艾特我或他（她）回复：' + '打劫  或抢劫'
+                        return "@" + whotalk + ': 开始艾特我或他（她）回复：' + '打劫 或 抢劫'
                     elif '成语接龙' in talk or '打开成语接龙' in talk:
                         talk = ''
                         if chengyu_list:
@@ -264,7 +265,7 @@ def text_reply(msg):  # 处理群消息
                         week_dict = dict(i1='星期一', i2='星期二', i3='星期三', i4='星期四', i5='星期五', i6='星期六', i7='星期日')
                         dayOfWeek = datetime.now().isoweekday()  # 返回数字1-7代表周一到周日
                         return '唉，本喵今天要上的网课就是这些啦：————' + week_dict['i' + str(dayOfWeek)] + '. |\n语文课：【成语接龙】\n课间 ' \
-                                                                                           '|\n玩小游戏：【打劫】 '
+                                                                                           '|\n玩小游戏：【打劫】 \n下午 \n音乐课：【点歌】'
                     elif '签到' in talk:
                         if whotalk not in gamedict:
                             pai += 1
@@ -328,11 +329,13 @@ def text_reply(msg):  # 处理群消息
                             return "👻[" + whotalk + ']查询成功\n👻签到排名：第' + str(pai) + '名\n👻资产：' + str(
                                 jifen) + '积分 ' + str(jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
                     elif '抢劫' in talk or '打劫' in talk:
+                        if this_num == 0:
+                            return "@ " + whotalk + "抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
                         if whotalk not in gamedict:
                             getpai = 0
                             getjifen = 0
                             getjinbi = 0
-                            to = random.randint(100, 2000)
+                            to = random.randint(0, this_num)
                             getjinbi += to
                             gamedict[whotalk] = getpai, getjifen, getjinbi
                             return '😂[' + whotalk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
@@ -341,10 +344,24 @@ def text_reply(msg):  # 处理群消息
                             pai = nowinfo[0]
                             jifen = nowinfo[1]
                             getjinbi = nowinfo[2]
-                            to = random.randint(100, 2000)
+                            to = random.randint(0, this_num)
                             getjinbi += to
                             gamedict[whotalk] = pai, jifen, getjinbi
                             return '😂[' + whotalk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                    elif '兑换' in talk:
+                        if whotalk not in gamedict:
+                            return '很抱歉，您的账户无资产~'
+                        else:
+                            nowinfo = gamedict[whotalk]
+                            pai = nowinfo[0]
+                            jifen = nowinfo[1]
+                            getjinbi = nowinfo[2]
+                            if jifen == 0:
+                                return '很抱歉，您的账户积分不足~'
+                            jifen -= 1
+                            this_num += 1000
+                            gamedict[whotalk] = pai, jifen, getjinbi
+                            return "@ " + whotalk + "兑换成功，祝您游戏愉快~"
                     elif '点歌' in talk or '播放' in talk:
                         name = talk.split()
                         if len(name) > 1:
@@ -377,11 +394,6 @@ def text_reply(msg):  # 处理群消息
                         return '很抱歉~该功能尚未实现！ 回复“帮助”查看已完成功能~'
                     elif '讲个故事' in talk or '故事' in talk or '讲故事' in talk:
                         return '很抱歉~该功能尚未实现！ 回复“帮助”查看已完成功能~'
-                    # elif  '兑换':
-                    #     if whotalk not in gamedict:
-                    #         return '很抱歉，您的账户无资产~'
-                    #     else:
-                    #         nowinfo = gamedict[whotalk]
                     elif '开始聊天' in talk or '开启聊天' in talk or '机器人聊天' in talk:
                         if qun_list:
                             for i in qun_list:
@@ -768,6 +780,8 @@ def set_info():
         f.write(str(hongbao_list))
         f.write('---')
         f.write(str(chengyu_list))
+        f.write('---')
+        f.write(str(this_num))
         f.close()
     return "存档成功"
 
@@ -783,6 +797,7 @@ def get_info():
             userchengyu_list = list[3]
             hongbao_list = list[4]
             chengyu_list = list[5]
+            this_num = int(list[6])
             res = "读档成功"
         else:
             res = "读档失败"

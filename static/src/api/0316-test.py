@@ -41,7 +41,7 @@ def quick_sort(list_1=[], list_2=[]):
     # print(list_1, list_2)
 
 
-count = int((20200402 / 24) + 19960701)
+count = int((20200625 / 24) + 19960701)
 # a1 = a2 = a3 = a4 = a5 = a6 = b = 0
 for i in range(count):
     a1 = random.randint(1, 35)
@@ -107,4 +107,16 @@ print(list_green)
 #     rer += 'green' + str(i) + '=0,'
 # print(rer)
 
+
+def bubble_sort(nums):
+    for i in range(len(nums) - 1):
+        ex_flag = False  # 改进后的冒泡，设置一个交换标志位
+        for j in range(len(nums) - i - 1):
+            
+            if nums[j] > nums[j + 1]:
+                nums[j], nums[j + 1] = nums[j + 1], nums[j]
+                ex_flag = True
+        if not ex_flag:
+            return nums  # 这里代表计算机偷懒成功 (〃'▽'〃)
+    return nums  # 这里代表计算机没有偷懒成功 o(╥﹏╥)o
 
