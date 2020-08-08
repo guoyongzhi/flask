@@ -41,7 +41,8 @@ def quick_sort(list_1=[], list_2=[]):
     # print(list_1, list_2)
 
 
-count = int((20200625 / 24) + 19960701)
+count = int((20200806 - 19960701) / 24)
+print(count)
 # a1 = a2 = a3 = a4 = a5 = a6 = b = 0
 for i in range(count):
     a1 = random.randint(1, 35)
@@ -79,28 +80,52 @@ for i in range(count):
     list2 = [random.randint(1, 16)]
     quick_sort(list1, list2)
 
-list_red = []
-list_green = []
-print(red)
-print(green)
-for r in red:
-    re = str(round(red[r] * 100 / count, 4)) + '%'
-    list_red.append(red[r])
-    red[r] = re
+
+# print(red)
+# print(green)
+red_name_list = list(red)
+red_values_list = list(red.values())
+bak_red_values_list = red_values_list.copy()
+# red_index = bak_red_values_list.index(max(bak_red_values_list))
+# print(red_name_list[red_index][3:])
+bak_red_values_list.sort(reverse=True)
+# print(bak_red_values_list)
+new_list = []
+for i in range(6):
+    new_list.append(bak_red_values_list[i])
+# print(new_list)
+red_all_list = []
+for i in new_list:
+    for r in red_values_list:
+        if i == r:
+            red_all_index = red_values_list.index(i)
+            # new_list.remove(i)
+            red_all_list.append(int(red_name_list[red_all_index][3:]))
+# print(red_all_list)
+index = list(green.values()).index(max(list(green.values())))
+print(red_all_list, list(green)[index][5:])
 
 
-for r in green:
-    re = str(round(green[r] * 100 / count, 4)) + '%'
-    list_green.append(green[r])
-    green[r] = re
+# list_red = []
+# list_green = []
+# for r in red:
+#     re = str(round(red[r] * 100 / count, 4)) + '%'
+#     list_red.append(red[r])
+#     red[r] = re
+#
+#
+# for r in green:
+#     re = str(round(green[r] * 100 / count, 4)) + '%'
+#     list_green.append(green[r])
+#     green[r] = re
 
 
-print(red)
-print(green)
-quick_sort(list_red)
-quick_sort(list_green)
-print(list_red)
-print(list_green)
+# print(red)
+# print(green)
+# quick_sort(list_red)
+# quick_sort(list_green)
+# print(list_red)
+# print(list_green)
 
 # rer = ''
 # for i in range(1, 17):
@@ -120,3 +145,42 @@ def bubble_sort(nums):
             return nums  # 这里代表计算机偷懒成功 (〃'▽'〃)
     return nums  # 这里代表计算机没有偷懒成功 o(╥﹏╥)o
 
+
+import numpy as np
+
+
+def play_lottery(my_money, play_num, money):
+    '''
+    随机选择数的中奖率
+    result：结果字典
+    num：用于统计每个数字出现次数
+    my_money：我的余额
+    play_num：投注期数
+    money：投注额
+    flag: 1代表赢钱 0则相反 2表示不输不赢
+    
+    '''
+    flag = 1
+    temp = my_money
+    result = {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}
+    data = np.random.randint(0, 10, (play_num, 1))
+    num = np.zeros((10, 1))
+    for i in data:
+        play = np.random.randint(0, 10, (5, 1))
+    if i in play:
+        temp = temp + money
+    else:
+        temp = temp - money
+    if result[str(i[0])] == i[0]:
+        num[i[0]] = num[i[0]] + 1
+    print('我的余额：', temp)
+    print('开奖结果统计：\n', num[0][0], num[1][0], num[2][0], num[3][0], num[4][0], num[5][0], num[6][0], num[7][0], num[8][0],
+          num[9][0])
+    if temp < my_money:
+        flag = 0
+    elif temp == my_money:
+        flag = 2
+    return flag
+
+
+# play_lottery(1000, 100, 10)

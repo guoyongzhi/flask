@@ -31,7 +31,7 @@ def my_db_select(sql, db):
 
 def my_si_db(sql, db):
     import pymysql
-    coon = pymysql.connect(host='192.168.11.106', user='root', passwd='iEntrance123456+-*/', port=3306, db=db, charset='utf8')
+    coon = pymysql.connect(host='192.168.11.153', user='root', passwd='iEntrance123456+-*/', port=3306, db=db, charset='utf8')
     cur = coon.cursor()  # 建立游标
     cur.execute(sql)  # 执行sql
     if sql.strip()[:6].upper() == 'SELECT':
