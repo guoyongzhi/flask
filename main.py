@@ -11,6 +11,7 @@ from urllib import parse
 from axf.dbmysql import my_db
 # from flask_cache import Cache
 from flask_caching import Cache
+from werkzeug.datastructures import CombinedMultiDict, MultiDict
 from werkzeug.contrib.cache import MemcachedCache
 # from extensions import cache
 # from setting import Config
@@ -69,6 +70,10 @@ def before_action():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    date_dict = request.values.to_dict()
+    print(date_dict.keys(), date_dict.items(), date_dict.values(), len(date_dict))
+    # c = CombinedMultiDict(['GET', 'POST'])
+    # print(c['username'])
     error = None
     if request.method == 'POST':
         if request.form['username'] == 'admin':
@@ -174,6 +179,6 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 
 if __name__ == '__main__':
-    app.debug = False
+    app.debug = True
     app.threaded = True
     app.run()  # socketio.run(app, host='192.168.11.103', port=5000, debug=True)

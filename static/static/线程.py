@@ -15,10 +15,10 @@ class RequestThread(threading.Thread):
     def __init__(self, thread_name):
         threading.Thread.__init__(self)
         self.test_count = 0
-
+    
     def run(self):
         self.test_performace()
-
+    
     def test_performace(self):
         global total
         global suc
@@ -48,13 +48,13 @@ class RequestThread(threading.Thread):
             print(e.message)
             total += 1
             exception += 1
-
+    
     def maxtime(self, ts):
         global maxtime
         # print(ts)
         if ts > maxtime:
             maxtime = ts
-
+    
     def mintime(self, ts):
         global mintime
         if ts < mintime:
@@ -70,6 +70,7 @@ while i <= thread_count:
         t = RequestThread("线程：" + str(i))
         t.start()
         i += 1
+        t.isAlive()
     except RuntimeError:
         time.sleep(5)
         b += 1
