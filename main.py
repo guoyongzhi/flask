@@ -181,4 +181,4 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 if __name__ == '__main__':
     app.debug = True
     app.threaded = True
-    app.run()  # socketio.run(app, host='192.168.11.103', port=5000, debug=True)
+    app.run(host='192.168.11.103', port=80)  # socketio.run(app, host='192.168.11.103', port=5000, debug=True)

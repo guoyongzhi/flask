@@ -35,4 +35,4 @@ def test(a):
 
 test(a)
 
-# get_new()
+get_new()

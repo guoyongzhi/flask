@@ -391,7 +391,7 @@ def text_reply(msg):  # 处理群消息
                                 jifen) + '积分 ' + str(jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
                     elif '抢劫' in talk or '打劫' in talk:
                         if this_num == 0:
-                            return "@ " + whotalk + "抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
+                            return "@ " + whotalk + " 抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
                         if whotalk not in gamedict:
                             getpai = 0
                             getjifen = 0
@@ -488,7 +488,9 @@ def text_reply(msg):  # 处理群消息
                             chengyu_list.append(qname)
                             return '@' + whotalk + " 成语接龙开始咯：" + res
                         else:
-                            return '@' + whotalk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'  # else:  #     return itchat.send('@' + whotalk + '\u2005收到！自动回复~')
+                            return '@' + whotalk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'
+                    else:
+                        return '@' + whotalk + '\u2005很抱歉~没明白您的意思呢'
                 elif '抢劫' in talk or '打劫' in talk:
                     try:
                         getpai = 0
@@ -528,80 +530,78 @@ def text_reply(msg):  # 处理群消息
                         return '报错了' + str(e)
             except Exception as e:
                 print('报错了', e)
-        else:
-            talk_list = talk.split('@')
-            whotalk = '点歌的人'
-            # print(talk_list)
-            talk1 = talk_list[0]
-            talk2 = talk_list[1]
-            new = talk2.split()
-            users_list = msg['User']['MemberList']
-            who = new[0]
-            dd = 0
-            ss = 0
-            try:
-                if users_list:
-                    while ss <= len(new):
-                        for i in users_list:
-                            tname = i['DisplayName']
-                            if tname == '':
-                                tname = i['NickName']
-                            if tname == who:
-                                dd = 1
-                                break
-                        if dd == 1:
-                            break
-                        else:
-                            ss += 1
-                            if ss >= len(new):
-                                break
-                            insp = who + ' ' + new[ss]
-                            a = 1
-                            ao = 0
-                            while ao <= 10:
-                                ll = len(insp)
-                                if talk2[:ll] == insp:
-                                    who = insp
-                                    break
-                                else:
-                                    nn = ' '
-                                    for i in range(0, a):
-                                        nn += ' '
-                                    insp = who + nn + new[ss]
-                                    a += 1
-                                    ao += 1
-                else:
-                    who = ''
-                    print('找不到用户')
-            except Exception as e:
-                who = ''
-            try:
-                if ss + 1 < len(new):
-                    if ss + 1 != len(new):
-                        talk = talk1
-                        for i in range(ss + 1, len(new)):
-                            if talk == '':
-                                talk = talk + new[i]
-                            else:
-                                talk = talk + ' ' + new[i]
-                    else:
-                        talk = new[ss + 1]
-                else:
-                    talk = talk1
-            except Exception as e:
-                print(e)
-                talk = talk1
-            print(whotalk + '@' + who, ':' + talk)
-            return
+        # else:
+        #     talk_list = talk.split('@')
+        #     whotalk = '点歌的人'
+        #     # print(talk_list)
+        #     talk1 = talk_list[0]
+        #     talk2 = talk_list[1]
+        #     new = talk2.split()
+        #     users_list = msg['User']['MemberList']
+        #     who = new[0]
+        #     dd = 0
+        #     ss = 0
+        #     try:
+        #         if users_list:
+        #             while ss <= len(new):
+        #                 for i in users_list:
+        #                     tname = i['DisplayName']
+        #                     if tname == '':
+        #                         tname = i['NickName']
+        #                     if tname == who:
+        #                         dd = 1
+        #                         break
+        #                 if dd == 1:
+        #                     break
+        #                 else:
+        #                     ss += 1
+        #                     if ss >= len(new):
+        #                         break
+        #                     insp = who + ' ' + new[ss]
+        #                     a = 1
+        #                     ao = 0
+        #                     while ao <= 10:
+        #                         ll = len(insp)
+        #                         if talk2[:ll] == insp:
+        #                             who = insp
+        #                             break
+        #                         else:
+        #                             nn = ' '
+        #                             for i in range(0, a):
+        #                                 nn += ' '
+        #                             insp = who + nn + new[ss]
+        #                             a += 1
+        #                             ao += 1
+        #         else:
+        #             who = ''
+        #             print('找不到用户')
+        #     except Exception as e:
+        #         who = ''
+        #     try:
+        #         if ss + 1 < len(new):
+        #             if ss + 1 != len(new):
+        #                 talk = talk1
+        #                 for i in range(ss + 1, len(new)):
+        #                     if talk == '':
+        #                         talk = talk + new[i]
+        #                     else:
+        #                         talk = talk + ' ' + new[i]
+        #             else:
+        #                 talk = new[ss + 1]
+        #         else:
+        #             talk = talk1
+        #     except Exception as e:
+        #         print(e)
+        #         talk = talk1
+        #     print(whotalk + '@' + who, ':' + talk)
+        #     return
     if '开始聊天' in talk or '开启聊天' in talk or '机器人聊天' in talk:
         if qun_list:
             for i in qun_list:
                 if i == msg['User']['NickName']:
-                    nn = i
                     return '已经开始聊天咯~'
-        else:
-            qun_list.append(qname)
-            return '你们好呀！我的小可爱们'
+        qun_list.append(qname)
+        return '你们好呀！我的小可爱们'
     elif '结束聊天' in talk or '关闭聊天' in talk or '不聊了' in talk:
         try:
             qun_list.remove(qname)
@@ -612,11 +612,9 @@ def text_reply(msg):  # 处理群消息
         if hongbao_list:
             for i in hongbao_list:
                 if i == msg['User']['NickName']:
-                    nn = i
                     return '已经开始提醒咯~'
-        else:
-            hongbao_list.append(qname)
-            return '红包提醒已打开'
+        hongbao_list.append(qname)
+        return '红包提醒已打开'
     elif '关闭红包提醒' in talk or '关闭红包预警' in talk:
         try:
             hongbao_list.remove(qname)
@@ -633,6 +631,9 @@ def text_reply(msg):  # 处理群消息
                     re = '\n'.join(res_list)
                 print(n, "--群聊：{}  ({})".format(re, datetime.now()))
                 return re
+    else:
+        if who == this:
+            return "抱歉~ 暂时不明白您说什么呢"
 
 
 @itchat.msg_register(itchat.content.NOTE)  # 通知类
