@@ -151,6 +151,9 @@ def text_reply(msg):  # 处理私人消息
                 if '{br}' in res:
                     res_list = res.split('{br}')
                     res = '\n'.join(res_list)
+                if '菲菲' in res:
+                    res_list = res.split('菲菲')
+                    res = '小白'.join(res_list)
                 print(n, "--私聊：{}  ({})".format(res, datetime.now()))
                 return res
     elif ana_list:
@@ -627,6 +630,9 @@ def text_reply(msg):  # 处理群消息
                 if '{br}' in re:
                     res_list = re.split('{br}')
                     re = '\n'.join(res_list)
+                if '菲菲' in re:
+                    res_list = re.split('菲菲')
+                    re = '小白'.join(res_list)
                 print(n, "--群聊：{}  ({})".format(re, datetime.now()))
                 return re
     elif ana_list:
