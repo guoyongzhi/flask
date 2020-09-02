@@ -136,14 +136,13 @@ def text_reply(msg):  # 处理私人消息
     elif '读档' in talk:
         res = get_info()
         return res
-    elif userchengyu_list:
+    elif name in userchengyu_list:
         for n in userchengyu_list:
             if name == n:
                 return chengyujielong(talk, name)
-        # else:
-        #     talk = ''
-        #     return chengyujielong(talk, name)
-    elif user_list:
+        talk = ''
+        return chengyujielong(talk, name)
+    elif name in user_list:
         for n in user_list:
             if n == name:
                 if "小白" in talk:
@@ -159,7 +158,7 @@ def text_reply(msg):  # 处理私人消息
                     res = '小白'.join(res_list)
                 print(n, "--私聊：{}  ({})".format(res, datetime.now()))
                 return res
-    elif ana_list:
+    elif name in ana_list:
         for n in ana_list:
             if n == name:
                 a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
@@ -301,11 +300,9 @@ def text_reply(msg):  # 处理群消息
                         if chengyu_list:
                             for i in chengyu_list:
                                 if i == qname:
-                                    nn = i
                                     return '@' + whotalk + ' ' + '已经开始成语接龙咯~'
-                            else:
-                                chengyu_list.append(qname)
-                                return '@' + whotalk + ' 成语接龙：' + chengyujielong(talk, qname)
+                        chengyu_list.append(qname)
+                        return '@' + whotalk + ' 成语接龙：' + chengyujielong(talk, qname)
                     elif '不玩了' in talk or '关闭成语接龙' in talk or '退出' in talk:
                         talk = '退出'
                         try:
@@ -452,11 +449,9 @@ def text_reply(msg):  # 处理群消息
                         if qun_list:
                             for i in qun_list:
                                 if i == msg['User']['NickName']:
-                                    nn = i
                                     return '已经开始聊天咯~'
-                        else:
-                            qun_list.append(qname)
-                            return '你们好呀！我的小可爱们'
+                        qun_list.append(qname)
+                        return '你们好呀！我的小可爱们'
                     elif '结束聊天' in talk or '关闭聊天' in talk or '不聊了' in talk:
                         try:
                             qun_list.remove(qname)
@@ -466,13 +461,8 @@ def text_reply(msg):  # 处理群消息
                     elif not talk:
                         # itchat.send('@' + whotalk + '\u2005艾特本喵有何事！')
                         return '@' + whotalk + '\u2005艾特本喵有何事！'
-                    if chengyu_list:
-                        for n in chengyu_list:
-                            if qname == n:
-                                return '@' + whotalk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
-                        else:
-                            chengyu_list.append(qname)
-                            return '@' + whotalk + '\u2005成语接龙开始咯：' + chengyujielong(talk, qname)
+                    if qname in chengyu_list:
+                        return '@' + whotalk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
                     if len(talk) == 4:  # 输入成语直接开始成语接龙
                         res = chengyujielong(talk, qname)
                         if res:
@@ -603,7 +593,7 @@ def text_reply(msg):  # 处理群消息
         if hongbao_list:
             for i in hongbao_list:
                 if i == msg['User']['NickName']:
-                    return '已经开始提醒咯~'
+                    return '已经开启红包提醒咯~'
         hongbao_list.append(qname)
         return '红包提醒已打开'
     elif '关闭红包提醒' in talk or '关闭红包预警' in talk:
@@ -625,27 +615,23 @@ def text_reply(msg):  # 处理群消息
                     return '已经开始发送名言名句咯~'
         ana_list.append(str(qname))
         return '你好呀！我的小可爱'
-    elif qun_list:
-        for n in qun_list:
-            if qname == n:
-                if "小白" in talk:
-                    res_list = talk.split('小白')
-                    talk = '菲菲'.join(res_list)
-                ress = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
-                re = ress.json()["content"]
-                if '{br}' in re:
-                    res_list = re.split('{br}')
-                    re = '\n'.join(res_list)
-                if '菲菲' in re:
-                    res_list = re.split('菲菲')
-                    re = '小白'.join(res_list)
-                print(n, "--群聊：{}  ({})".format(re, datetime.now()))
-                return re
-    elif ana_list:
-        for n in ana_list:
-            if n == qname:
-                a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
-                return a.split()[0]
+    elif qname in qun_list:
+        if "小白" in talk:
+            res_list = talk.split('小白')
+            talk = '菲菲'.join(res_list)
+        ress = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
+        re = ress.json()["content"]
+        if '{br}' in re:
+            res_list = re.split('{br}')
+            re = '\n'.join(res_list)
+        if '菲菲' in re:
+            res_list = re.split('菲菲')
+            re = '小白'.join(res_list)
+        print(n, "--群聊：{}  ({})".format(re, datetime.now()))
+        return re
+    elif qname in ana_list:
+        a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
+        return a.split()[0]
     else:
         if who == this:
             return "抱歉~ 暂时不明白您说什么呢"
