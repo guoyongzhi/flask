@@ -93,14 +93,9 @@ def text_reply(msg):  # 处理私人消息
         if user_list:
             for i in user_list:
                 if i == name:
-                    ss = i
                     return '已经开始聊天咯~'
-        elif not ss:
-            user_list.append(str(name))
-            return '你好呀！我的小可爱'
-        else:
-            user_list.append(str(name))
-            return '你好呀！我的小可爱'
+        user_list.append(str(name))
+        return '你好呀！我的小可爱'
     elif talk == '结束聊天' or talk == '关闭聊天' or talk == '不聊了':
         try:
             user_list.remove(str(name))
@@ -112,14 +107,9 @@ def text_reply(msg):  # 处理私人消息
         if userchengyu_list:
             for i in userchengyu_list:
                 if i == msg['User']['NickName']:
-                    ss = i
                     return '已经开始成语接龙咯~'
-        else:
-            userchengyu_list.append(str(name))
-            return chengyujielong(talk, name)
-        if not ss:
-            userchengyu_list.append(str(name))
-            return chengyujielong(talk, name)
+        userchengyu_list.append(str(name))
+        return chengyujielong(talk, name)
     elif talk == '不玩了' or talk == '关闭成语接龙' or talk == '退出':
         talk = '退出'
         try:
@@ -137,14 +127,9 @@ def text_reply(msg):  # 处理私人消息
         if ana_list:
             for i in ana_list:
                 if i == name:
-                    ss = i
-                    return '已经开始聊天咯~'
-        elif not ss:
-            ana_list.append(str(name))
-            return '你好呀！我的小可爱'
-        else:
-            ana_list.append(str(name))
-            return '你好呀！我的小可爱'
+                    return '已经开始发送名言名句咯~'
+        ana_list.append(str(name))
+        return '你好呀！我的小可爱'
     elif '存档' in talk:
         res = set_info()
         return res
@@ -621,6 +606,19 @@ def text_reply(msg):  # 处理群消息
             return '红包提醒已关闭~'
         except Exception as e:
             print(e, '该值不存在')
+    elif talk == '取消名言名句' or talk == '关闭名言名句' or talk == '退出名言名句':
+        try:
+            ana_list.remove(str(qname))
+            return '拜拜~'
+        except Exception as e:
+            print(e, '该值不存在')
+    elif '名言名句' in talk:
+        if ana_list:
+            for i in ana_list:
+                if i == qname:
+                    return '已经开始发送名言名句咯~'
+        ana_list.append(str(qname))
+        return '你好呀！我的小可爱'
     elif qun_list:
         for n in qun_list:
             if qname == n:
@@ -631,6 +629,11 @@ def text_reply(msg):  # 处理群消息
                     re = '\n'.join(res_list)
                 print(n, "--群聊：{}  ({})".format(re, datetime.now()))
                 return re
+    elif ana_list:
+        for n in ana_list:
+            if n == qname:
+                a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
+                return a.split()[0]
     else:
         if who == this:
             return "抱歉~ 暂时不明白您说什么呢"
@@ -639,7 +642,7 @@ def text_reply(msg):  # 处理群消息
 @itchat.msg_register(itchat.content.NOTE)  # 通知类
 def note_rep(msg):
     # print(msg)
-    print('发红包了', msg)
+    print('来通知了', msg)
 
 
 @itchat.msg_register(itchat.content.NOTE, isGroupChat=True)  # 通知类
@@ -905,4 +908,5 @@ def get_info():
     return res
 
 
-itchat.run()
+if __name__ == '__main__':
+    itchat.run()
