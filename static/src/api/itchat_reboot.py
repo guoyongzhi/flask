@@ -146,6 +146,9 @@ def text_reply(msg):  # 处理私人消息
     elif user_list:
         for n in user_list:
             if n == name:
+                if "小白" in talk:
+                    res_list = talk.split('小白')
+                    talk = '菲菲'.join(res_list)
                 res = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
                 res = res.json()["content"]
                 if '{br}' in res:
@@ -625,6 +628,9 @@ def text_reply(msg):  # 处理群消息
     elif qun_list:
         for n in qun_list:
             if qname == n:
+                if "小白" in talk:
+                    res_list = talk.split('小白')
+                    talk = '菲菲'.join(res_list)
                 ress = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
                 re = ress.json()["content"]
                 if '{br}' in re:
