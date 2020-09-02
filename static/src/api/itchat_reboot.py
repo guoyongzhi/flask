@@ -627,7 +627,7 @@ def text_reply(msg):  # 处理群消息
         if '菲菲' in re:
             res_list = re.split('菲菲')
             re = '小白'.join(res_list)
-        print(n, "--群聊：{}  ({})".format(re, datetime.now()))
+        print(qname, "--群聊：{}  ({})".format(re, datetime.now()))
         return re
     elif qname in ana_list:
         a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
