@@ -83,7 +83,7 @@ class Client(object):
     def recv(self):
         try:
             while self.ws.connected:
-                result = self.ws.recv()
+                result = self.ws.recv(1024)
                 print("received msg:" + str(result))
         except Exception as e:
             print(e)

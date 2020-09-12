@@ -51,7 +51,7 @@ def get_execl():
     # return 'OK'
 
 
-@app.route('/testtest', methods=['Get', 'POST'])
+@app.route('/testtest', methods=['GET', 'POST'])
 def test_test():
     """
     请求参数
@@ -59,36 +59,49 @@ def test_test():
     :return:
     :rtype:
     """
-    date_dict = CommonMethod(request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
-                                                        'methodsType')
-    print(date_dict)
-    # res = 'error'
     try:
-        if 'date' in date_dict['dateType']:
-            if 'post' in date_dict['methodsType']:
-                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], data=json.loads(date_dict['date']),
-                                    headers=json.loads(date_dict['headers']), timeout=3).text
+        date_dict = request.get_json()
+        if date_dict:
+            Data = date_dict['date']
+            headers = date_dict['headers']
+        else:
+            date_dict = CommonMethod(request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
+                                                                'methodsType')
+            Data = json.loads(date_dict['date'])
+            headers = json.loads(date_dict['headers'])
+        if not date_dict:
+            return "请求无参数或参数不正确"
+        print(date_dict, type(date_dict))
+    except Exception as e:
+        print(e)
+        return "请求错误"
+    try:
+        if 'date' == date_dict['dateType']:
+            if 'post' == date_dict['methodsType']:
+                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], data=Data,
+                                    headers=headers, timeout=3).text
             else:
-                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], data=json.loads(date_dict['date']),
-                                   headers=json.loads(date_dict['headers']), timeout=3).text
-        elif 'json' in date_dict['dateType']:
-            if 'post' in date_dict['methodsType']:
-                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], json=json.loads(date_dict['date']),
-                                    headers=json.loads(date_dict['headers'])).text
+                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], data=Data,
+                                   headers=headers, timeout=3).text
+        elif 'json' == date_dict['dateType']:
+            if 'post' == date_dict['methodsType']:
+                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], json=Data,
+                                    headers=headers).text
             else:
-                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], json=json.loads(date_dict['date']),
-                                   headers=json.loads(date_dict['headers']), timeout=3).text
-        elif 'params' in date_dict['dateType']:
-            if 'post' in date_dict['methodsType']:
-                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], params=json.loads(date_dict['date']),
-                                    headers=json.loads(date_dict['headers']), timeout=3).text
+                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], json=Data,
+                                   headers=headers, timeout=3).text
+        elif 'params' == date_dict['dateType']:
+            if 'post' == date_dict['methodsType']:
+                res = requests.post(date_dict['hostPort'] + date_dict['urlAddr'], params=Data,
+                                    headers=headers, timeout=3).text
             else:
-                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], params=json.loads(date_dict['date']),
-                                   headers=json.loads(date_dict['headers']), timeout=3).text
+                res = requests.get(date_dict['hostPort'] + date_dict['urlAddr'], params=Data,
+                                   headers=headers, timeout=3).text
         else:
             res = '未找到对应的请求参数类型'
     except Exception as e:
-        res = e
+        print(e)
+        res = "请求错误"
     return res
 
 
@@ -112,6 +125,68 @@ def upload():
     return render_template('upload.html')
 
 
+@app.route('/Parking/GetInstructCache', methods=['GET', 'POST'])
+def get_instruct_cache():
+    # print(request.values)
+    print(request.get_json())
+    # date_dict = CommonMethod(request.values).common_all('sn', 'index', 'pageSize')
+    # print(date_dict)
+    result = dict(ID=1, Instruction=1, InstructData="")
+    res = {'msg': "1", "result": [result], "code": 1}
+    print(res)
+    return jsonify(res)
+
+
+@app.route('/Parking/GetPermissionList', methods=['GET', 'POST'])
+def get_permission_list():
+    # print(request.values)
+    print(request.get_json())
+    # date_dict = CommonMethod(request.values).common_all('camaraId', 'indx', 'size')
+    # print(date_dict)
+    result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
+                  stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
+                  permissionGroupID=1, userID=1001, isUpdate=False)
+    res = {'msg': "1", "result": [result], "code": 1}
+    print(res)
+    return jsonify(res)
+
+
+@app.route('/Parking/GetAddPermissionList', methods=['GET', 'POST'])
+def get_add_permission_list():
+    date_dict = CommonMethod(request.values).common_all('carNums')
+    print(date_dict)
+    result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
+                  stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
+                  permissionGroupID=1, userID=1001, isUpdate=False)
+    res = {'msg': "1", "result": [result], "code": 1}
+    print(res)
+    return jsonify(res)
+
+
+@app.route('/ThumbReceive.ashx', methods=['GET', 'POST'])
+def thumb_receive():
+    if request.method == 'POST':
+        try:
+            file = request.files['file']
+            # print(request.get_json())
+            date_dict = CommonMethod(request.values).common_all('Path', "CarNum", "IsReal")
+            print(date_dict)
+            if file:
+                filename = secure_filename(file.filename)
+                print(filename)
+                if not filename[-3:] in 'jpgJPGpngPNGmp3mp4warcsvxlsxlsx':
+                    return jsonify({'msg': '文件格式不对', 'msg_code': "000011"})
+                file.save(os.path.join(APP_ROOT, 'static/uploads', filename))
+                res = True
+                return jsonify(res)
+            else:
+                return json_available({'msg_code': "000002", 'msg': "请求参数为空"})
+        except Exception as e:
+            # api_x.error(e)
+            return json.dumps({'msg': '操作失败请联系管理员', 'msg_code': '000010'})
+    return render_template('upload.html')
+
+
 @app.route('/', methods=['Get', 'POST'])
 def index():
     return "ok"
@@ -119,5 +194,5 @@ def index():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run('192.168.11.103', 9999)
+    app.run('192.168.11.103', 8083)
 

@@ -6,39 +6,12 @@ import random
 import time
 import itchat
 import logger
+import traceback
 
 from static.src.api.chengyujielong import chengyujielong
 from static.src.api.count.read_name_all_info import read_name_all_info
 
 import requests
-
-# 登录
-itchat.auto_login()
-
-# # 发送消息
-# itchat.send(u'你好', 'filehelper')
-# 获取好友列表
-friends = itchat.get_friends(update=True)
-# 初始化计数器，有男有女，当然，有些人是不填的
-male = female = other = 0
-
-# 遍历这个列表，列表里第一位是自己，所以从"自己"之后开始计算 1表示男性，2女性
-for i in friends[1:]:
-    # print(i)
-    sex = i["Sex"]
-    if sex == 1:
-        male += 1
-    elif sex == 2:
-        female += 1
-    else:
-        other += 1
-
-# 总数算上，好计算比例啊～
-total = len(friends[1:])
-print('好友总数', total)
-print(u"男性好友：%.2f%%" % (float(male) / total * 100))
-print(u"女性好友：%.2f%%" % (float(female) / total * 100))
-print(u"其他：%.2f%%" % (float(other) / total * 100))
 
 user_list = []
 userchengyu_list = []
@@ -155,6 +128,7 @@ def text_reply(msg):  # 处理私人消息
             inner_time = int(timedelta.total_seconds(lo_time) / 60)
             if inner_time > 180:
                 itchat.send(name + ':' + talk, hetalk[0]['UserName'])
+                ret_dict[name] = talk_time
                 return '信息已收到，本人暂时离开，急事请致电，谢谢配合！'
             else:
                 itchat.send(name + ':' + talk, hetalk[0]['UserName'])
@@ -172,6 +146,7 @@ this_num = 0
 qun_list = []
 chengyu_list = []
 hongbao_list = []
+Num_bomb_dict = dict()
 
 
 @itchat.msg_register(itchat.content.TEXT, isGroupChat=True)  # 群消息（群游戏）
@@ -268,7 +243,7 @@ def text_reply(msg):  # 处理群消息
                         # with open('help.txt', encoding='utf-8') as f:
                         #     aa = f.readlines()
                         # f.close()
-                        return "自己看看吧，是不是多到眼花\n机器人聊天    成语接龙\n群签到    打劫游戏\n点歌    \n其他功能正在努力开发中"
+                        return "自己看看吧，是不是多到眼花\n机器人聊天    成语接龙\n群签到    打劫游戏\n点歌    踩雷游戏\n其他功能正在努力开发中"
                     elif '聊天菜单' in talk or '聊天帮助' in talk or '聊天help' in talk:
                         return "@" + whotalk + ': 开始艾特我回复：' + '开始聊天  或  开启聊天  或  机器人聊天\n结束回复：结束聊天  或  关闭聊天  或  不聊了。'
                     elif '成语接龙菜单' in talk or '成语接龙帮助' in talk or '成语接龙help' in talk:
@@ -439,6 +414,49 @@ def text_reply(msg):  # 处理群消息
                     elif not talk:
                         # itchat.send('@' + whotalk + '\u2005艾特本喵有何事！')
                         return '@' + whotalk + '\u2005艾特本喵有何事！'
+                    elif '踩雷' in talk or '数字炸弹' == talk:
+                        if qname in Num_bomb_dict:
+                            return '踩雷游戏已开启'
+                        Num_bomb_dict[qname] = random.randint(0, 100), 0, 100
+                        return "你好呀！我的小可爱。踩雷开始咯"
+                    elif talk == '取消踩雷' or talk == '关闭踩雷' or talk == '退出踩雷':
+                        try:
+                            del Num_bomb_dict[str(qname)]
+                            return '拜拜~'
+                        except Exception as e:
+                            print(e, '该值不存在')
+                    elif qname in Num_bomb_dict:
+                        Num = -1
+                        try:
+                            Num = int(talk)
+                        except Exception as e:
+                            print("非踩雷", e)
+                        if Num != -1:
+                            try:
+                                a1, c, d = Num_bomb_dict[qname]
+                                if a1 == -1:
+                                    a1 = random.randint(0, 100)
+                                    c = 0
+                                    d = 100
+                                if Num <= c or Num >= d:
+                                    return '@' + whotalk + " 输入错误，请输入：" + str(c) + "到" + str(d) + "数字"
+                                elif Num > a1:
+                                    d = Num
+                                    Num_bomb_dict[qname] = a1, c, d
+                                    return '@' + whotalk + " 恭喜您未中雷，请继续：" + str(c) + "到" + str(d) + "的数字"
+                                elif Num < a1:
+                                    c = Num
+                                    Num_bomb_dict[qname] = a1, c, d
+                                    return '@' + whotalk + " 恭喜您未中雷，请继续：" + str(c) + "到" + str(d) + "的数字"
+                                elif Num == a1:
+                                    a1 = -1
+                                    Num_bomb_dict[qname] = a1, c, d
+                                    return '@' + whotalk + " 踩雷了，本轮已结束。继续请继续输入数字。"
+                                else:
+                                    Num_bomb_dict[qname] = a1, c, d
+                                    return '@' + whotalk + " 输入错误，请输入：" + str(c) + "到" + str(d) + "的数字"
+                            except Exception as e:
+                                print("处理踩雷异常了", e)
                     if qname in chengyu_list:
                         return '@' + whotalk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
                     if len(talk) == 4:  # 输入成语直接开始成语接龙
@@ -876,4 +894,38 @@ def get_info():
 
 
 if __name__ == '__main__':
-    itchat.run()
+    try:
+        # 登录
+        itchat.auto_login()
+    
+        # # 发送消息
+        # itchat.send(u'你好', 'filehelper')
+        # 获取好友列表
+        # friends = itchat.get_friends(update=True)
+        # 初始化计数器，有男有女，当然，有些人是不填的
+        # male = female = other = 0
+    
+        # 遍历这个列表，列表里第一位是自己，所以从"自己"之后开始计算 1表示男性，2女性
+        # for i in friends[1:]:
+        #     # print(i)
+        #     sex = i["Sex"]
+        #     if sex == 1:
+        #         male += 1
+        #     elif sex == 2:
+        #         female += 1
+        #     else:
+        #         other += 1
+    
+        # 总数算上，好计算比例啊～
+        # total = len(friends[1:])
+        # print('好友总数', total)
+        # print(u"男性好友：%.2f%%" % (float(male) / total * 100))
+        # print(u"女性好友：%.2f%%" % (float(female) / total * 100))
+        # print(u"其他：%.2f%%" % (float(other) / total * 100))
+        itchat.run()
+    except Exception as e:
+        with open('chat/error.log', 'a') as f:
+            f.write('*' * 100 + "\n")
+            f.write(traceback.format_exc())  # 使用 traceback.format_exc() 获取异常详细信息
+            f.write('*' * 100 + "\n")
+
