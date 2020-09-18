@@ -2,13 +2,14 @@
 import json
 import socket
 import struct
-import hashlib, base64
+import hashlib
+import base64
 import threading
 import time
 
 import logger
 
-connectionlist = {}  # 存放链接客户fd,元组
+connection_list = {}  # 存放链接客户fd,元组
 g_code_length = 0
 g_header_length = 0  # websocket数据头部长度
 PRINT_FLAG = False
@@ -22,38 +23,41 @@ lock = threading.RLock()
 
 
 # 计算web端提交的数据长度并返回
-def get_datalength(msg):
+def get_data_length(message):
     global g_code_length
     global g_header_length
-    g_code_length = msg[1] & 127
-    if g_code_length == 126:
-        g_code_length = struct.unpack('>H', msg[2:4])[0]
-        g_header_length = 8
-    elif g_code_length == 127:
-        g_code_length = struct.unpack('>Q', msg[2:10])[0]
-        g_header_length = 14
-    else:
-        g_header_length = 6
-    g_code_length = int(g_code_length)
+    try:
+        g_code_length = message[1] & 127
+        if g_code_length == 126:
+            g_code_length = struct.unpack('>H', message[2:4])[0]
+            g_header_length = 8
+        elif g_code_length == 127:
+            g_code_length = struct.unpack('>Q', message[2:10])[0]
+            g_header_length = 14
+        else:
+            g_header_length = 6
+        g_code_length = int(g_code_length)
+    except Exception:
+        g_code_length = 0
     return g_code_length
 
 
 # 解析web端提交的bytes信息，返回str信息（可以解析中文信息）
-def parse_data(msg):
+def parse_data(message):
     global g_code_length
     try:
-        g_code_length = msg[1] & 127
+        g_code_length = message[1] & 127
         if g_code_length == 126:
-            g_code_length = struct.unpack('>H', msg[2:4])[0]
-            masks = msg[4:8]
-            data = msg[8:]
+            g_code_length = struct.unpack('>H', message[2:4])[0]
+            masks = message[4:8]
+            data = message[8:]
         elif g_code_length == 127:
-            g_code_length = struct.unpack('>Q', msg[2:10])[0]
-            masks = msg[10:14]
-            data = msg[14:]
+            g_code_length = struct.unpack('>Q', message[2:10])[0]
+            masks = message[10:14]
+            data = message[14:]
         else:
-            masks = msg[2:6]
-            data = msg[6:]
+            masks = message[2:6]
+            data = message[6:]
         en_bytes = b""
         cn_bytes = []
         for i, d in enumerate(data):
@@ -82,15 +86,21 @@ def parse_data(msg):
         else:
             res = en_bytes.decode()
     except Exception as e:
-        # print(e)
+        print("解析消息出错：", e)
         # if not res:
         res = ""
     return res
 
 
 # 调用socket的send方法发送str信息给web端
-def sendMessage(msg):
-    global connectionlist
+def sendMessage(message):
+    """
+    :param message: 消息内容
+    :type message: str
+    :return: 无
+    :rtype: None
+    """
+    global connection_list
     global lock
     lock.acquire()
     try:
@@ -98,9 +108,9 @@ def sendMessage(msg):
         send_msg += b"\x81"
         back_str = []
         back_str.append('\x81')
-        data_length = len(msg.encode())  # 可能有中文内容传入，因此计算长度的时候需要转为bytes信息
+        data_length = len(message.encode())  # 可能有中文内容传入，因此计算长度的时候需要转为bytes信息
         if PRINT_FLAG:
-            print("INFO: send message is %s and len is %d" % (msg, len(msg.encode('utf-8'))))
+            print("INFO: send message is %s and len is %d" % (message, len(message.encode('utf-8'))))
         # 数据长度的三种情况
         if data_length <= 125:  # 当消息内容长度小于等于125时，数据帧的第二个字节0xxxxxxx 低7位直接标示消息内容的长度
             send_msg += str.encode(chr(data_length))
@@ -112,27 +122,50 @@ def sendMessage(msg):
             send_msg += struct.pack('>q', data_length)
         else:
             print(u'太长了')
-        send_message = send_msg + msg.encode('utf-8')
+        send_message = send_msg + message.encode('utf-8')
         del_list = []
-        for connection in connectionlist.values():
-            if send_message != None and len(send_message) > 0:
-                try:
-                    connection.send(send_message)
-                except ConnectionAbortedError:
-                    print("找不到连接：准备删除", connection)
-                    del_list.append([k for k, v in connectionlist.items() if v == connection][0])
+        if connection_list:
+            for connection in connection_list.values():
+                if send_message is not None and len(send_message) > 0:
+                    try:
+                        connection.send(send_message)
+                    except ConnectionAbortedError:
+                        print("找不到连接：准备删除", connection)
+                        del_list.append([k for k, v in connection_list.items() if v == connection][0])
         if del_list:
             for i in del_list:
                 print("找不到连接：正在删除", i)
-                del connectionlist[i]
+                del connection_list[i]
+    finally:
+        lock.release()
+
+
+def send_recv_message(message):  # 直接回复
+    global connection_list
+    global lock
+    lock.acquire()
+    try:
+        del_list = []
+        if connection_list:
+            for connection in connection_list.values():
+                if message is not None and len(message) > 0:
+                    try:
+                        connection.send(message)
+                    except ConnectionAbortedError:
+                        print("找不到连接：准备删除", connection)
+                        del_list.append([k for k, v in connection_list.items() if v == connection][0])
+        if del_list:
+            for i in del_list:
+                print("找不到连接：正在删除", i)
+                del connection_list[i]
     finally:
         lock.release()
 
 
 # 删除连接,从集合中删除连接对象item
-def deleteconnection(item):
-    global connectionlist
-    del connectionlist['connection' + item]
+def delete_connection(item):
+    global connection_list
+    del connection_list['connection' + item]
 
 
 # 定义WebSocket对象(基于线程对象)
@@ -150,6 +183,7 @@ class WebSocket(threading.Thread):
         self.buffer = ""
         self.buffer_utf8 = b""
         self.length_buffer = 0
+        self.head_sign = False  # Socket是否握手的标志,初始化为false
     
     def generate_token(self, WebSocketKey):
         WebSocketKey = WebSocketKey + self.GUID
@@ -165,60 +199,68 @@ class WebSocket(threading.Thread):
         global g_code_length
         global g_header_length
         global return_time
-        self.handshaken = False  # Socket是否握手的标志,初始化为false
         while True:
-            if self.handshaken == False:  # 如果没有进行握手
-                if PRINT_FLAG:
-                    print('INFO: Socket %s Start Handshaken with %s!' % (self.index, self.remote))
-                self.buffer = self.conn.recv(1024).decode(
-                    'utf-8')  # socket会话收到的只能是utf-8编码的信息，将接收到的bytes数据，通过utf-8编码方式解码为unicode编码进行处理
-                if PRINT_FLAG:
-                    print("INFO: Socket %s self.buffer is {%s}" % (self.index, self.buffer))
-                if self.buffer.find('\r\n\r\n') != -1:
-                    headers = {}
-                    header, data = self.buffer.split('\r\n\r\n', 1)  # 按照这种标志分割一次,结果为：header data
-                    # 对header进行分割后，取出后面的n-1个部分
-                    for line in header.split("\r\n")[1:]:  # 再对header 和 data部分进行单独的解析
-                        key, value = line.split(": ", 1)  # 逐行的解析Request Header信息(Key,Value)
-                        headers[key] = value
-                    try:
-                        WebSocketKey = headers["Sec-WebSocket-Key"]
-                    except KeyError:
-                        print("Socket %s Handshaken Failed!" % (self.index))
-                        deleteconnection(str(self.index))
+            if self.head_sign is False:  # 如果没有进行握手
+                try:
+                    if PRINT_FLAG:
+                        print('INFO: Socket %s Start head sign with %s!' % (self.index, self.remote))
+                    self.buffer = self.conn.recv(1024).decode(
+                        'utf-8')  # socket会话收到的只能是utf-8编码的信息，将接收到的bytes数据，通过utf-8编码方式解码为unicode编码进行处理
+                    if PRINT_FLAG:
+                        print("INFO: Socket %s self.buffer is {%s}" % (self.index, self.buffer))
+                    if self.buffer.find('\r\n\r\n') != -1:
+                        headers = {}
+                        header, data = self.buffer.split('\r\n\r\n', 1)  # 按照这种标志分割一次,结果为：header data
+                        # 对header进行分割后，取出后面的n-1个部分
+                        for line in header.split("\r\n")[1:]:  # 再对header 和 data部分进行单独的解析
+                            key, value = line.split(": ", 1)  # 逐行的解析Request Header信息(Key,Value)
+                            headers[key] = value
+                        try:
+                            WebSocketKey = headers["Sec-WebSocket-Key"]
+                        except KeyError:
+                            print("Socket %s Handshaken Failed!" % self.index)
+                            delete_connection(str(self.index))
+                            self.conn.close()
+                            break
+                        WebSocketToken = self.generate_token(WebSocketKey)
+                        headers["Location"] = ("ws://%s%s" % (headers["Host"], self.path))
+                        # 握手过程,服务器构建握手的信息,进行验证和匹配
+                        # Upgrade: WebSocket 表示为一个特殊的http请求,请求目的为从http协议升级到websocket协议
+                        handshake = "HTTP/1.1 101 Switching Protocols\r\n" \
+                                    "Connection: Upgrade\r\n" \
+                                    "Sec-WebSocket-Accept: " + WebSocketToken + "\r\n" \
+                                                                                "Upgrade: websocket\r\n\r\n"
+                        self.conn.send(handshake.encode(encoding='utf-8'))  # 前文以bytes类型接收，此处以bytes类型进行发送
+                        # 此处需要增加代码判断是否成功建立连接
+                        self.head_sign = True  # socket连接成功建立之后修改握手标志
+                        # 向全部连接客户端集合发送消息,(环境套接字x的到来)
+                        sendMessage("Welcome " + self.name + " !")
+                        g_code_length = 0
+
+                    else:
+                        print("Socket %s Error2!" % self.index)
+                        delete_connection(str(self.index))
                         self.conn.close()
                         break
-                    WebSocketToken = self.generate_token(WebSocketKey)
-                    headers["Location"] = ("ws://%s%s" % (headers["Host"], self.path))
-                    # 握手过程,服务器构建握手的信息,进行验证和匹配
-                    # Upgrade: WebSocket 表示为一个特殊的http请求,请求目的为从http协议升级到websocket协议
-                    handshake = "HTTP/1.1 101 Switching Protocols\r\n" \
-                                "Connection: Upgrade\r\n" \
-                                "Sec-WebSocket-Accept: " + WebSocketToken + "\r\n" \
-                                                                            "Upgrade: websocket\r\n\r\n"
-                    self.conn.send(handshake.encode(encoding='utf-8'))  # 前文以bytes类型接收，此处以bytes类型进行发送
-                    # 此处需要增加代码判断是否成功建立连接
-                    self.handshaken = True  # socket连接成功建立之后修改握手标志
-                    # 向全部连接客户端集合发送消息,(环境套接字x的到来)
-                    # sendMessage("Welocomg " + self.name + " !")
-                    g_code_length = 0
-                else:
-                    print("Socket %s Error2!" % (self.index))
-                    deleteconnection(str(self.index))
+                except Exception as e:
+                    print(e, "握手连接失败正在删除 connection" + str(self.index))
+                    delete_connection(str(self.index))
                     self.conn.close()
                     break
             else:
-                # 每次接收128字节数据，需要判断是否接收完所有数据，如没有接收完，需要循环接收完再处理
+                # 每次接收1024字节数据，需要判断是否接收完所有数据，如没有接收完，需要循环接收完再处理
                 try:
                     mm = self.conn.recv(1024)
                 except Exception as e:
                     mm = b''
-                    if '[WinError 10054] 远程主机强迫关闭了一个现有的连接。' in e:
-                        deleteconnection(str(self.index))
+                    if '[WinError 10054] 远程主机强迫关闭了一个现有的连接。' in str(e):
+                        delete_connection(str(self.index))
+                        self.conn.close()
+                        break
                 # 计算接受的长度，判断是否接收完，如未接受完需要继续接收
                 if mm != "b''":
                     if g_code_length == 0:
-                        get_datalength(mm)  # 调用此函数可以计算并修改全局变量g_code_length和g_header_length的值
+                        get_data_length(mm)  # 调用此函数可以计算并修改全局变量g_code_length和g_header_length的值
                     self.length_buffer += len(mm)
                     self.buffer_utf8 += mm
                     if self.length_buffer - g_header_length < g_code_length:
@@ -231,19 +273,26 @@ class WebSocket(threading.Thread):
                             print("INFO Line 204: Recv信息 %s,长度为 %d:" % (self.buffer_utf8, len(self.buffer_utf8)))
                         if not self.buffer_utf8:
                             continue
-                        recv_message = parse_data(self.buffer_utf8)
+                        recv_message = parse_data(self.buffer_utf8)  # 接受信息转换
+                        # recv_message = self.buffer_utf8
+                        nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
                         if not recv_message:
-                            pass
+                            new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
+                            old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
+                            loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
+                            send_recv_message(self.buffer_utf8)
+                            if int(loop_time.tm_sec) >= 30:
+                                print("收到心跳并已回复" + nowTime)
+                                return_time = nowTime
                         elif recv_message:
                             if recv_message == "quit":
-                                print("Socket %s Logout!" % (self.index))
+                                print("Socket %s Logout!" % self.index)
                                 nowTime = time.strftime('%H:%M:%S', time.localtime(time.time()))
                                 sendMessage("%s %s say: %s" % (nowTime, self.remote, self.name + " Logout"))
-                                deleteconnection(str(self.index))
+                                delete_connection(str(self.index))
                                 self.conn.close()
                                 break
                             else:
-                                nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
                                 try:
                                     json_str = json.loads(recv_message)
                                     if json_str['EventType'] != 0 and json_str['EventType'] != 1:
@@ -257,18 +306,28 @@ class WebSocket(threading.Thread):
                                             new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
                                             old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
                                             loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
+                                            sendMessage(json_str)
                                             if int(loop_time.tm_sec) >= 6:
-                                                # print(nowTime, recv_message)
                                                 if json_str['EventType'] == 1:
-                                                    sendMessage(recv_message)
                                                     print("收到并已回复心跳：", nowTime, recv_message)
                                                     return_time = nowTime
                                             if json_str['InfoCode'] is not None:
                                                 print(nowTime, recv_message)
                                 except Exception as e:
                                     if e == '[WinError 10054] 远程主机强迫关闭了一个现有的连接。':
-                                        deleteconnection(str(self.index))
-                                    print("解析错误原因是：", e, "错误的消息是：", recv_message)
+                                        delete_connection(str(self.index))
+                                        self.conn.close()
+                                        break
+                                    # print("解析错误原因是：", e, "错误的消息是：", recv_message)
+                                    new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
+                                    old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
+                                    loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
+                                    # send_recv_message(recv_message)
+                                    # send_recv_message(recv_message)
+                                    send_recv_message(self.buffer_utf8)
+                                    if int(loop_time.tm_sec) >= 30:
+                                        print("收到心跳并已回复" + nowTime)
+                                        return_time = nowTime
                         g_code_length = 0
                         self.length_buffer = 0
                         self.buffer_utf8 = b""
@@ -292,7 +351,7 @@ class WebSocketServer(object):
         self.socket.bind((ip, port))
         self.socket.listen(50)
         # 全局连接集合
-        global connectionlist
+        global connection_list
         
         while True:
             # 服务器响应请求,返回连接客户的信息(连接fd,客户地址)
@@ -303,7 +362,7 @@ class WebSocketServer(object):
             # 线程启动
             newSocket.start()
             # 更新连接的集合(hash表的对应关系)-name->sockfd
-            connectionlist['connection' + str(self.i)] = connection
+            connection_list['connection' + str(self.i)] = connection
             print("新连接", connection)
             self.i += 1
 

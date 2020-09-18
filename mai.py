@@ -1,5 +1,6 @@
 import json
 import os
+import logger
 
 import flask
 import time
@@ -133,7 +134,7 @@ def get_instruct_cache():
     # print(date_dict)
     result = dict(ID=1, Instruction=1, InstructData="")
     res = {'msg': "1", "result": [result], "code": 1}
-    print(res)
+    # print(res)
     return jsonify(res)
 
 
@@ -147,7 +148,7 @@ def get_permission_list():
                   stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
                   permissionGroupID=1, userID=1001, isUpdate=False)
     res = {'msg': "1", "result": [result], "code": 1}
-    print(res)
+    # print(res)
     return jsonify(res)
 
 
@@ -159,7 +160,7 @@ def get_add_permission_list():
                   stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
                   permissionGroupID=1, userID=1001, isUpdate=False)
     res = {'msg': "1", "result": [result], "code": 1}
-    print(res)
+    # print(res)
     return jsonify(res)
 
 
@@ -182,7 +183,8 @@ def thumb_receive():
             else:
                 return json_available({'msg_code': "000002", 'msg': "请求参数为空"})
         except Exception as e:
-            # api_x.error(e)
+            mai_log = logger.logs()
+            mai_log.error(e)
             return json.dumps({'msg': '操作失败请联系管理员', 'msg_code': '000010'})
     return render_template('upload.html')
 

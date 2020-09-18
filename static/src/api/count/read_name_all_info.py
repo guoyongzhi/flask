@@ -2,32 +2,47 @@ import os
 import random
 
 
-class read_name_all_info():
+class read_name_all_info(object):
     def __init__(self, file_dir):
+        file_name_dict = dict()
         for root, dirs, files in os.walk(file_dir):
-            self.file_dir = file_dir
-            self.files = files
+            file_name_dict[root] = file_dir, files
+        self.file_name_dict = file_name_dict
     
     def run(self):
+        res = ""
         name_list = self.get_count()
-        a = random.randint(0, len(name_list) - 1)
-        info = self.get_info(name_list[a])
-        b = random.randint(0, len(info) - 1)
-        a = info[b]
-        bb = a.split('、')
-        return bb[1]
+        if name_list:
+            am = random.randint(0, len(name_list) - 1)
+            info = self.get_file_content(name_list[am])
+            b = random.randint(0, len(info) - 1)
+            aa = info[b]
+            bb = aa.split('、')
+            res = bb[1]
+        return res
     
     def get_count(self):
         name_list = []
-        for name in self.files:
-            if name[-3:] == 'txt':
-                name_list.append(self.file_dir + '\\' + name)
+        if self.file_name_dict:
+            name = self.file_name_dict.keys()
+            for n in name:
+                file_dir, files = self.file_name_dict[n]
+                if files:
+                    for i in files:
+                        if i[-3:] == 'txt':
+                            name_list.append(os.path.join(n, i))
         return name_list
     
-    def get_info(self, name):
-        with open(name, mode='r') as f:
-            name = f.readlines()
-        return name
+    @classmethod
+    def get_file_content(cls, name):
+        try:
+            with open(name, mode='r', encoding='GBK') as f:
+                content = f.readlines()
+        except UnicodeDecodeError:
+            with open(name, mode='r', encoding='utf-8') as f:
+                content = f.readlines()
+        return content
+    
     
 """
     try:

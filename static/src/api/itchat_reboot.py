@@ -14,7 +14,7 @@ from static.src.api.count.read_name_all_info import read_name_all_info
 import requests
 
 user_list = []
-userchengyu_list = []
+user_idiom_list = []
 ana_list = []
 ret_dict = dict()
 
@@ -22,7 +22,7 @@ ret_dict = dict()
 @itchat.msg_register(itchat.content.TEXT)  # 私发消息
 def text_reply(msg):  # 处理私人消息
     # msg = "努力上班中，晚点回复！"
-    global user_list, userchengyu_list, ana_list, ret_dict
+    global user_list, user_idiom_list, ana_list, ret_dict
     talk = msg.text
     print(msg['User']['NickName'], msg['User']['RemarkName'], talk)
     name = msg['User']['RemarkName']
@@ -36,28 +36,28 @@ def text_reply(msg):  # 处理私人消息
                 ty = tot[:1]
                 who = tot[1:]
                 ss = 0
-                talk = ta_list[ss + 1]
-                if ss + 1 != len(ta_list):
-                    talk = ''
-                    for i in range(ss + 1, len(ta_list)):
-                        if talk == '':
-                            talk = talk + ta_list[i]
+                talk_info = ta_list[ss + 1]
+                if ss + 2 != len(ta_list):
+                    for i in range(ss + 2, len(ta_list)):
+                        if talk_info == '':
+                            talk_info = talk_info + ta_list[i]
                         else:
-                            talk = talk + ' ' + ta_list[i]
-                list = who.split(',')
-                if not list:
-                    list = who.split('，')
-                if ty == '@':
-                    for i in list:
-                        if i != '':
-                            hetalk = itchat.search_friends(name=i)
-                            itchat.send(talk, hetalk[0]['UserName'])
-                else:
-                    for i in list:
-                        if i != '':
-                            hetalk = itchat.search_chatrooms(name=i)
-                            itchat.send(talk, hetalk[0]['UserName'])
-                return who + '发送成功'
+                            talk_info = talk_info + ' ' + ta_list[i]
+                to_list = who.split(',')
+                if not to_list:
+                    to_list = who.split('，')
+                if to_list:
+                    if ty == '@':
+                        for i in to_list:
+                            if i != '':
+                                he_talk = itchat.search_friends(name=i)
+                                itchat.send(talk_info, he_talk[0]['UserName'])
+                    else:
+                        for i in to_list:
+                            if i != '':
+                                q_talk = itchat.search_chatrooms(name=i)
+                                itchat.send(talk_info, q_talk[0]['UserName'])
+                return who + ':发送成功'
             except Exception as e:
                 print(e)
                 return '发送失败'
@@ -74,14 +74,14 @@ def text_reply(msg):  # 处理私人消息
             print(e, '该值不存在')
     elif talk == '成语接龙' or talk == '打开成语接龙':
         talk = ''
-        if name in userchengyu_list:
+        if name in user_idiom_list:
             return '已经开始成语接龙咯~'
-        userchengyu_list.append(str(name))
+        user_idiom_list.append(str(name))
         return chengyujielong(talk, name)
     elif talk == '不玩了' or talk == '关闭成语接龙' or talk == '退出':
         talk = '退出'
         try:
-            userchengyu_list.remove(str(name))
+            user_idiom_list.remove(str(name))
             return chengyujielong(talk, name)
         except Exception as e:
             print(e, '该值不存在')
@@ -102,13 +102,13 @@ def text_reply(msg):  # 处理私人消息
     elif '读档' in talk:
         res = get_info()
         return res
-    elif name in userchengyu_list:
+    elif name in user_idiom_list:
         return chengyujielong(talk, name)
     elif name in user_list:
         if "小白" in talk:
             talk = talk.replace('小白', '菲菲')
-        ress = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
-        re = ress.json()["content"]
+        result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
+        re = result.json()["content"]
         if '{br}' in re:
             re = re.replace('{br}', '\n')
         if '菲菲' in re:
@@ -120,59 +120,61 @@ def text_reply(msg):  # 处理私人消息
         return a.split()[0]
     else:
         talk_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        hetalk = itchat.search_friends(name='机器人_菲菲')
+        he_talk = itchat.search_friends(name='机器人_菲菲')
         if name in ret_dict:
             last_time = ret_dict[name]
             lo_time = datetime.strptime(talk_time, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,
                                                                                             '%Y-%m-%d %H:%M:%S')
             inner_time = int(timedelta.total_seconds(lo_time) / 60)
             if inner_time > 180:
-                itchat.send(name + ':' + talk, hetalk[0]['UserName'])
+                itchat.send(name + ':' + talk, he_talk[0]['UserName'])
                 ret_dict[name] = talk_time
                 return '信息已收到，本人暂时离开，急事请致电，谢谢配合！'
             else:
-                itchat.send(name + ':' + talk, hetalk[0]['UserName'])
+                itchat.send(name + ':' + talk, he_talk[0]['UserName'])
                 ret_dict[name] = talk_time
                 return
         else:
             ret_dict[name] = talk_time
-            itchat.send(name + ':' + talk, hetalk[0]['UserName'])
+            itchat.send(name + ':' + talk, he_talk[0]['UserName'])
             return '信息已收到，本人暂时离开，急事请致电，谢谢配合！'
 
 
-gamedict = dict()
+game_dict = dict()
 pai = 0
 this_num = 0
 qun_list = []
-chengyu_list = []
-hongbao_list = []
+idiom_list = []
+red_packet_list = []
 Num_bomb_dict = dict()
 
 
 @itchat.msg_register(itchat.content.TEXT, isGroupChat=True)  # 群消息（群游戏）
 def text_reply(msg):  # 处理群消息
-    global pai
-    global this_num, gamedict, qun_list, chengyu_list, hongbao_list
-    talk = msg['Content']
-    this = msg['User']['Self']['DisplayName']
-    qname = msg['User']['NickName']
-    whotalk = msg['ActualNickName']
-    who = ''
-    if not this:  # 当没有备注时取微信名称
-        this = msg['User']['Self']['NickName']
-    if not whotalk:
-        whotalk = this
-    # print(msg['User']['NickName'], msg['User']['Self']['DisplayName'], '--', msg['ActualNickName'], ':', talk)
-    logfilename = msg['User']['NickName']
-    aa = logfilename.split('/')
-    an = ''
-    for i in aa:
-        an += i
-    x = logger.logs(an)
+    global pai, this_num, game_dict, qun_list, idiom_list, red_packet_list
     try:
-        x.info(msg['ActualNickName'] + "：" + talk)
-    except Exception as e:
-        print(e, msg['ActualNickName'] + "：" + talk)
+        talk = msg['Content']
+        this = msg['User']['Self']['DisplayName']
+        qname = msg['User']['NickName']
+        who_talk = msg['ActualNickName']
+        who = ''
+        if not this:  # 当没有备注时取微信名称
+            this = msg['User']['Self']['NickName']
+        if not who_talk:
+            who_talk = this
+        log_File_Name = msg['User']['NickName']
+        aa = log_File_Name.split('/')
+        an = ''
+        for i in aa:
+            an += i
+        x = logger.logs(an)
+        try:
+            x.info(msg['ActualNickName'] + "：" + talk)
+        except Exception as ex:
+            print(ex, msg['ActualNickName'] + "：" + talk)
+    except Exception as ea:
+        print(ea)
+        return
     if msg['isAt']:
         if talk[:1] == '@':
             try:
@@ -181,17 +183,17 @@ def text_reply(msg):  # 处理群消息
                 who = new[0]
                 who = who[1:]
                 if who == '所有人':
-                    return '@' + whotalk + ' 收到~'
+                    return '@' + who_talk + ' 收到~'
                 dd = 0
                 ss = 0
                 try:
                     if users_list:
                         while ss <= len(new):
                             for i in users_list:
-                                tname = i['DisplayName']
-                                if tname == '':
-                                    tname = i['NickName']
-                                if tname == who:
+                                t_name = i['DisplayName']
+                                if t_name == '':
+                                    t_name = i['NickName']
+                                if t_name == who:
                                     dd = 1
                                     break
                             if dd == 1:
@@ -200,27 +202,27 @@ def text_reply(msg):  # 处理群消息
                                 ss += 1
                                 if ss >= len(new):
                                     break
-                                insp = who + ' ' + new[ss]
+                                joint_name = who + ' ' + new[ss]
                                 a = 1
                                 ao = 0
                                 while ao <= 10:
-                                    ll = len(insp) + 1
-                                    if talk[:ll] == '@' + insp:
-                                        who = insp
+                                    ll = len(joint_name) + 1
+                                    if talk[:ll] == '@' + joint_name:
+                                        who = joint_name
                                         break
                                     else:
                                         nn = ' '
                                         for i in range(0, a):
                                             nn += ' '
-                                        insp = who + nn + new[ss]
+                                        joint_name = who + nn + new[ss]
                                         a += 1
                                         ao += 1
                     else:
                         who = ''
                         print('找不到用户', msg)
-                except Exception as e:
+                except Exception as eb:
                     who = ''
-                    print('处理用户抱错了', e, msg)
+                    print('处理用户抱错了', eb, msg)
                 try:
                     if ss + 1 < len(new):
                         if ss + 1 != len(new):
@@ -234,61 +236,57 @@ def text_reply(msg):  # 处理群消息
                             talk = new[ss + 1]
                     else:
                         talk = ''
-                except Exception as e:
-                    print(e, msg)
+                except Exception as ec:
+                    print(ec, msg)
                     talk = ''
-                # print(whotalk + '@' + who, talk)
                 if who == this:
                     if '菜单' in talk or '帮助' in talk or 'help' in talk:
-                        # with open('help.txt', encoding='utf-8') as f:
-                        #     aa = f.readlines()
-                        # f.close()
                         return "自己看看吧，是不是多到眼花\n机器人聊天    成语接龙\n群签到    打劫游戏\n点歌    踩雷游戏\n其他功能正在努力开发中"
                     elif '聊天菜单' in talk or '聊天帮助' in talk or '聊天help' in talk:
-                        return "@" + whotalk + ': 开始艾特我回复：' + '开始聊天  或  开启聊天  或  机器人聊天\n结束回复：结束聊天  或  关闭聊天  或  不聊了。'
+                        return "@" + who_talk + ': 开始艾特我回复：' + '开始聊天  或  开启聊天  或  机器人聊天\n结束回复：结束聊天  或  关闭聊天  或  不聊了。'
                     elif '成语接龙菜单' in talk or '成语接龙帮助' in talk or '成语接龙help' in talk:
-                        return "@" + whotalk + ': 开始艾特我回复：' + '成语接龙  或  打开成语接龙  或  直接说成语\n结束回复：不玩了  或  关闭成语接龙  或  退出。'
+                        return "@" + who_talk + ': 开始艾特我回复：' + '成语接龙  或  打开成语接龙  或  直接说成语\n结束回复：不玩了  或  关闭成语接龙  或  退出。'
                     elif '签到菜单' in talk or '签到帮助' in talk or '签到help' in talk:
-                        return "@" + whotalk + ': 开始艾特我回复：签到 '
+                        return "@" + who_talk + ': 开始艾特我回复：签到 '
                     elif '抢劫菜单' in talk or '抢劫帮助' in talk or '抢劫help' in talk:
-                        return "@" + whotalk + ': 开始艾特我或他（她）回复：' + '打劫 或 抢劫'
+                        return "@" + who_talk + ': 开始艾特我或他（她）回复：' + '打劫 或 抢劫'
                     elif '成语接龙' in talk or '打开成语接龙' in talk:
                         talk = ''
-                        if qname in chengyu_list:
-                            return '@' + whotalk + ' ' + '已经开始成语接龙咯~'
-                        chengyu_list.append(qname)
-                        return '@' + whotalk + ' 成语接龙：' + chengyujielong(talk, qname)
+                        if qname in idiom_list:
+                            return '@' + who_talk + ' ' + '已经开始成语接龙咯~'
+                        idiom_list.append(qname)
+                        return '@' + who_talk + ' 成语接龙：' + chengyujielong(talk, qname)
                     elif '不玩了' in talk or '关闭成语接龙' in talk or '退出' in talk:
                         talk = '退出'
                         try:
-                            chengyu_list.remove(qname)
-                            return '@' + whotalk + ' 成语接龙：' + chengyujielong(talk, qname)
+                            idiom_list.remove(qname)
+                            return '@' + who_talk + ' 成语接龙：' + chengyujielong(talk, qname)
                         except Exception as e:
                             print(e, '该值不存在')
                     elif '课程表' in talk:
                         week_dict = dict(i1='星期一', i2='星期二', i3='星期三', i4='星期四', i5='星期五', i6='星期六', i7='星期日')
                         dayOfWeek = datetime.now().isoweekday()  # 返回数字1-7代表周一到周日
-                        return '唉，本喵今天要上的网课就是这些啦：————' + week_dict['i' + str(dayOfWeek)] + '. |\n语文课：【成语接龙】\n课间 ' \
-                                                                                           '|\n玩小游戏：【打劫】 \n下午 \n音乐课：【点歌】'
+                        return '唉，本喵今天要上的网课就是这些啦：————' + week_dict[
+                            'i' + str(dayOfWeek)] + '. |\n语文课：【成语接龙】\n课间 ' '|\n玩小游戏：【打劫】 \n下午 \n音乐课：【点歌】'
                     elif '签到' in talk:
-                        if whotalk not in gamedict:
+                        if who_talk not in game_dict:
                             pai += 1
                             qiandaojifen = 10
                             qiandaojinbi = 500
-                            gamedict[whotalk] = pai, qiandaojifen, qiandaojinbi
+                            game_dict[who_talk] = pai, qiandaojifen, qiandaojinbi
                             now = time.strftime("%H:%M:%S")
-                            return "👻[" + whotalk + ']签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(
+                            return "👻[" + who_talk + ']签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(
                                 qiandaojifen) + '积分 ' + str(qiandaojinbi) + '金币\n👻头衔：新手上路\n👻时间：' + str(now)
                         else:
-                            nowinfo = gamedict[whotalk]
-                            npai = nowinfo[0]
-                            jifen = nowinfo[1]
-                            jinbi = nowinfo[2]
-                            if npai == 0:
-                                pai += 1
+                            now_info = game_dict[who_talk]
+                            d_pai = now_info[0]
+                            jifen = now_info[1]
+                            jinbi = now_info[2]
+                            if pai == 0:
+                                d_pai += 1
                                 jifen += 10
                                 jinbi += 500
-                                gamedict[whotalk] = pai, jifen, jinbi
+                                game_dict[who_talk] = pai, jifen, jinbi
                                 if jinbi < 1000:
                                     ty = '新手上路'
                                 elif jinbi < 5000:
@@ -302,15 +300,15 @@ def text_reply(msg):  # 处理群消息
                                 elif jinbi > 200000:
                                     ty = '大富翁'
                                 now = time.strftime("%H:%M:%S")
-                                return "👻" + whotalk + '签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(
+                                return "👻" + who_talk + '签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(
                                     jifen) + '积分 ' + str(jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
                             else:
                                 return '亲您已签到过了，请勿重复签到'
                     elif '查询' in talk:
-                        if whotalk not in gamedict:
+                        if who_talk not in game_dict:
                             return '您今天未签到哦~'
-                        nowinfo = gamedict[whotalk]
-                        pai = nowinfo[0]
+                        nowinfo = game_dict[who_talk]
+                        t_pai = nowinfo[0]
                         jifen = nowinfo[1]
                         jinbi = nowinfo[2]
                         if jinbi < 1000:
@@ -326,48 +324,48 @@ def text_reply(msg):  # 处理群消息
                         elif jinbi > 200000:
                             ty = '大富翁'
                         now = time.strftime("%H:%M:%S")
-                        if pai == 0:
-                            return "👻[" + whotalk + ']查询成功\n👻签到排名：未签到\n👻资产：' + str(jifen) + '积分 ' + str(
+                        if t_pai == 0:
+                            return "👻[" + who_talk + ']查询成功\n👻签到排名：未签到\n👻资产：' + str(jifen) + '积分 ' + str(
                                 jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
                         else:
-                            return "👻[" + whotalk + ']查询成功\n👻签到排名：第' + str(pai) + '名\n👻资产：' + str(
+                            return "👻[" + who_talk + ']查询成功\n👻签到排名：第' + str(t_pai) + '名\n👻资产：' + str(
                                 jifen) + '积分 ' + str(jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
                     elif '抢劫' in talk or '打劫' in talk:
                         if this_num == 0:
-                            return "@ " + whotalk + " 抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
-                        if whotalk not in gamedict:
+                            return "@ " + who_talk + " 抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
+                        if who_talk not in game_dict:
                             getpai = 0
                             getjifen = 0
                             getjinbi = 0
                             to = random.randint(0, this_num)
                             getjinbi += to
                             this_num -= to
-                            gamedict[whotalk] = getpai, getjifen, getjinbi
-                            return '😂[' + whotalk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                            game_dict[who_talk] = getpai, getjifen, getjinbi
+                            return '😂[' + who_talk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
                         else:
-                            nowinfo = gamedict[whotalk]
-                            pai = nowinfo[0]
+                            nowinfo = game_dict[who_talk]
+                            set_pai = nowinfo[0]
                             jifen = nowinfo[1]
                             getjinbi = nowinfo[2]
                             to = random.randint(0, this_num)
                             getjinbi += to
                             this_num -= to
-                            gamedict[whotalk] = pai, jifen, getjinbi
-                            return '😂[' + whotalk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                            game_dict[who_talk] = set_pai, jifen, getjinbi
+                            return '😂[' + who_talk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
                     elif '兑换' in talk:
-                        if whotalk not in gamedict:
+                        if who_talk not in game_dict:
                             return '很抱歉，您的账户无资产~'
                         else:
-                            nowinfo = gamedict[whotalk]
-                            pai = nowinfo[0]
+                            nowinfo = game_dict[who_talk]
+                            t_pai = nowinfo[0]
                             jifen = nowinfo[1]
                             getjinbi = nowinfo[2]
                             if jifen == 0:
                                 return '很抱歉，您的账户积分不足~'
                             jifen -= 1
                             this_num += 1000
-                            gamedict[whotalk] = pai, jifen, getjinbi
-                            return "@ " + whotalk + "兑换成功，祝您游戏愉快~"
+                            game_dict[who_talk] = t_pai, jifen, getjinbi
+                            return "@ " + who_talk + "兑换成功，祝您游戏愉快~"
                     elif '点歌' in talk or '播放' in talk:
                         name = talk.split()
                         if len(name) > 1:
@@ -383,18 +381,21 @@ def text_reply(msg):  # 处理群消息
                         if '排行榜' == songname:
                             return '亲暂未开通排行榜点歌哦~功能持续更新中，敬请期待 点歌请艾特我回复点歌 【歌名】'
                         url = 'https://c.y.qq.com/soso/fcgi-bin/client_search_cp?ct=24&qqmusic_ver=1298&new_json=1' \
-                              '&remoteplace=txt.yqq.song&searchid=55989056282747366&t=0&aggr=1&cr=1&catZhida=1&lossless=0' \
-                              '&flag_qc=0&p=1&n=10&w=' + songname + '&g_tk_new_20200303=1945000638&g_tk=654347293&loginUin=1983496818&hostUin=0&format=json' \
-                                                                    '&inCharset=utf8&outCharset=utf-8&notice=0&platfin talk orm=yqq.json&needNewCode=0 '
+                              '&remoteplace=txt.yqq.song&searchid=55989056282747366&t=0&aggr=1&cr=1&catZhida=1&' \
+                              'lossless=0&flag_qc=0&p=1&n=10&w=' + songname + '&g_tk_new_20200303=1945000638&' \
+                                                                              'g_tk=654347293&loginUin=1983496818&' \
+                                                                              'hostUin=0&format=json&inCharset=utf8&' \
+                                                                              'outCharset=utf-8&notice=0&' \
+                                                                              'platfin talk orm=yqq.json&needNewCode=0 '
                         res = requests.get(url=url)
                         jm = json.loads(res.text)
                         try:
                             psid = jm['data']['song']['list'][0]['id']
                             songer = jm['data']['song']['list'][0]['singer'][0]['name']
                             songname = jm['data']['song']['list'][0]['title']
-                        except Exception as e:
+                        except Exception:
                             return '点歌失败，找不到该歌曲'
-                        test = 'https://i.y.qq.com/v8/playsong.html?songid={}&source=yqq#wechat_redirect'.format(psid)
+                        test = "https://i.y.qq.com/v8/playsong.html?songid={}&source=yqq#wechat_redirect".format(psid)
                         return '非常好听的《' + songname + ' - ' + str(songer) + '》来咯~ 点击链接欣赏:\n' + test
                     elif '讲个笑话' in talk or '笑话' in talk or '讲笑话' in talk:
                         return '很抱歉~该功能尚未实现！ 回复“帮助”查看已完成功能~'
@@ -412,13 +413,13 @@ def text_reply(msg):  # 处理群消息
                         except Exception as e:
                             print(e, '该值不存在')
                     elif not talk:
-                        # itchat.send('@' + whotalk + '\u2005艾特本喵有何事！')
-                        return '@' + whotalk + '\u2005艾特本喵有何事！'
+                        return '@' + who_talk + '\u2005艾特本喵有何事！'
                     elif '踩雷' in talk or '数字炸弹' == talk:
                         if qname in Num_bomb_dict:
-                            return '踩雷游戏已开启'
+                            a1, c, d = Num_bomb_dict[qname]
+                            return '踩雷游戏已开启，当前 ' + c + ' 到 ' + d + " 呢!"
                         Num_bomb_dict[qname] = random.randint(0, 100), 0, 100
-                        return "你好呀！我的小可爱。踩雷开始咯"
+                        return "你好呀！我的小可爱。踩雷开始咯 当前 0 到 100 呢"
                     elif talk == '取消踩雷' or talk == '关闭踩雷' or talk == '退出踩雷':
                         try:
                             del Num_bomb_dict[str(qname)]
@@ -439,48 +440,48 @@ def text_reply(msg):  # 处理群消息
                                     c = 0
                                     d = 100
                                 if Num <= c or Num >= d:
-                                    return '@' + whotalk + " 输入错误，请输入：" + str(c) + "到" + str(d) + "数字"
+                                    return '@' + who_talk + " 输入错误，请输入：" + str(c) + " 到" + str(d) + "的数字"
                                 elif Num > a1:
                                     d = Num
                                     Num_bomb_dict[qname] = a1, c, d
-                                    return '@' + whotalk + " 恭喜您未中雷，请继续：" + str(c) + "到" + str(d) + "的数字"
+                                    return '@' + who_talk + " 恭喜您未中雷，请继续：" + str(c) + " 到" + str(d) + "的数字"
                                 elif Num < a1:
                                     c = Num
                                     Num_bomb_dict[qname] = a1, c, d
-                                    return '@' + whotalk + " 恭喜您未中雷，请继续：" + str(c) + "到" + str(d) + "的数字"
+                                    return '@' + who_talk + " 恭喜您未中雷，请继续：" + str(c) + " 到" + str(d) + "的数字"
                                 elif Num == a1:
                                     a1 = -1
                                     Num_bomb_dict[qname] = a1, c, d
-                                    return '@' + whotalk + " 踩雷了，本轮已结束。继续请继续输入数字。"
+                                    return '@' + who_talk + " 踩雷了，本轮已结束。继续请继续输入数字。"
                                 else:
                                     Num_bomb_dict[qname] = a1, c, d
-                                    return '@' + whotalk + " 输入错误，请输入：" + str(c) + "到" + str(d) + "的数字"
+                                    return '@' + who_talk + " 输入错误，请输入：" + str(c) + "到" + str(d) + "的数字"
                             except Exception as e:
                                 print("处理踩雷异常了", e)
-                    if qname in chengyu_list:
-                        return '@' + whotalk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
+                    if qname in idiom_list:
+                        return '@' + who_talk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
                     if len(talk) == 4:  # 输入成语直接开始成语接龙
                         res = chengyujielong(talk, qname)
                         if res:
-                            chengyu_list.append(qname)
-                            return '@' + whotalk + " 成语接龙开始咯：" + res
+                            idiom_list.append(qname)
+                            return '@' + who_talk + " 成语接龙开始咯：" + res
                         else:
-                            return '@' + whotalk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'
+                            return '@' + who_talk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'
                     else:
-                        return '@' + whotalk + '\u2005很抱歉~没明白您的意思呢'
+                        return '@' + who_talk + '\u2005很抱歉~没明白您的意思呢'
                 elif '抢劫' in talk or '打劫' in talk:
                     try:
                         getpai = 0
                         getjifen = 0
                         getjinbi = 0
-                        if whotalk in gamedict:
-                            whoget = gamedict[whotalk]
+                        if who_talk in game_dict:
+                            whoget = game_dict[who_talk]
                             getpai = whoget[0]
                             getjifen = whoget[1]
                             getjinbi = whoget[2]
-                        if who not in gamedict:
+                        if who not in game_dict:
                             return '打劫失败，对方无资产！'
-                        whoset = gamedict[who]
+                        whoset = game_dict[who]
                         setpai = whoset[0]
                         setjifen = whoset[1]
                         setjinbi = whoset[2]
@@ -491,87 +492,90 @@ def text_reply(msg):  # 处理群消息
                                     to = random.randint(0, setjinbi)
                                     setjinbi = setjinbi - to
                                     getjinbi = getjinbi + to
-                                    gamedict[whotalk] = getpai, getjifen, getjinbi
-                                    gamedict[who] = setpai, setjifen, setjinbi
-                                    return '😂[' + whotalk + '] 抢劫 [' + who + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                                    game_dict[who_talk] = getpai, getjifen, getjinbi
+                                    game_dict[who] = setpai, setjifen, setjinbi
+                                    return '😂[' + who_talk + '] 抢劫 [' + who + '] 成功，抢走了对方' + str(
+                                        to) + '金币！\n⚠您还可以抢劫n次！'
                             else:
                                 to = random.randint(0, getjinbi)
                                 setjinbi += to
                                 getjinbi -= to
-                                gamedict[whotalk] = getpai, getjifen, getjinbi
-                                gamedict[who] = setpai, setjifen, setjinbi
-                                return '😂[' + whotalk + '] 抢劫 [' + who + '] 失败，反被对方抢走了' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                                game_dict[who_talk] = getpai, getjifen, getjinbi
+                                game_dict[who] = setpai, setjifen, setjinbi
+                                return '😂[' + who_talk + '] 抢劫 [' + who + '] 失败，反被对方抢走了' + str(to) +\
+                                       '金币！\n⚠您还可以抢劫n次！'
                         else:
                             return '打劫失败，对方无资产！'
                     except Exception as e:
                         return '报错了' + str(e)
             except Exception as e:
-                print('报错了', e)
-        # else:
-        #     talk_list = talk.split('@')
-        #     whotalk = '点歌的人'
-        #     # print(talk_list)
-        #     talk1 = talk_list[0]
-        #     talk2 = talk_list[1]
-        #     new = talk2.split()
-        #     users_list = msg['User']['MemberList']
-        #     who = new[0]
-        #     dd = 0
-        #     ss = 0
-        #     try:
-        #         if users_list:
-        #             while ss <= len(new):
-        #                 for i in users_list:
-        #                     tname = i['DisplayName']
-        #                     if tname == '':
-        #                         tname = i['NickName']
-        #                     if tname == who:
-        #                         dd = 1
-        #                         break
-        #                 if dd == 1:
-        #                     break
-        #                 else:
-        #                     ss += 1
-        #                     if ss >= len(new):
-        #                         break
-        #                     insp = who + ' ' + new[ss]
-        #                     a = 1
-        #                     ao = 0
-        #                     while ao <= 10:
-        #                         ll = len(insp)
-        #                         if talk2[:ll] == insp:
-        #                             who = insp
-        #                             break
-        #                         else:
-        #                             nn = ' '
-        #                             for i in range(0, a):
-        #                                 nn += ' '
-        #                             insp = who + nn + new[ss]
-        #                             a += 1
-        #                             ao += 1
-        #         else:
-        #             who = ''
-        #             print('找不到用户')
-        #     except Exception as e:
-        #         who = ''
-        #     try:
-        #         if ss + 1 < len(new):
-        #             if ss + 1 != len(new):
-        #                 talk = talk1
-        #                 for i in range(ss + 1, len(new)):
-        #                     if talk == '':
-        #                         talk = talk + new[i]
-        #                     else:
-        #                         talk = talk + ' ' + new[i]
-        #             else:
-        #                 talk = new[ss + 1]
-        #         else:
-        #             talk = talk1
-        #     except Exception as e:
-        #         print(e)
-        #         talk = talk1
-        #     print(whotalk + '@' + who, ':' + talk)
-        #     return
+                print('报错了',
+                      e)
+                # else:
+                #     talk_list = talk.split('@')
+                #     who_talk = '点歌的人'  #
+                # print(talk_list)
+                #     talk1 = talk_list[0]
+                #     talk2 = talk_list[1]
+                #     new = talk2.split()
+                #     users_list = msg['User']['MemberList']
+                #     who = new[0]
+                #     dd = 0
+                #     ss = 0
+                #     try:
+                #         if users_list:
+                #             while ss <= len(new):
+                #                 for i in users_list:
+                #                     tname = i['DisplayName']
+                #                     if tname == '':
+                #                         tname = i['NickName']
+                #                     if tname == who:
+                #                         dd = 1
+                #                         break
+                #                 if dd == 1:
+                #                     break
+                #                 else:
+                #                     ss += 1
+                #                     if ss >= len(new):
+                #                         break
+                #                     joint_name = who + ' ' + new[ss]
+                #                     a = 1
+                #                     ao = 0
+                #                     while ao <= 10:
+                #                         ll = len(joint_name)
+                #                         if talk2[:ll] == joint_name:
+                #                             who = joint_name
+                #                             break
+                #                         else:
+                #                             nn = ' '
+                #                             for i in range(0, a):
+                #                                 nn += ' '
+                #                             joint_name = who + nn + new[ss]
+                #                             a += 1
+                #                             ao += 1
+                #         else:
+                #             who = ''
+                #             print('找不到用户')
+                #     except Exception as e:
+                #         who = ''
+                #     try:
+                #         if ss + 1 < len(new):
+                #             if ss + 1 != len(new):
+                #                 talk = talk1
+                #                 for i in range(ss + 1, len(new)):
+                #                     if talk == '':
+                #                         talk = talk + new[i]
+                #                     else:
+                #                         talk = talk + ' ' + new[i]
+                #             else:
+                #                 talk = new[ss + 1]
+                #         else:
+                #             talk = talk1
+                #     except Exception as e:
+                #         print(e)
+                #         talk = talk1
+                #     print(who_talk + '@' + who, ':' + talk)
+                #     return
     if '开始聊天' in talk or '开启聊天' in talk or '机器人聊天' in talk:
         if qname in qun_list:
             return '已经开始聊天咯~'
@@ -584,13 +588,13 @@ def text_reply(msg):  # 处理群消息
         except Exception as e:
             print(e, '该值不存在')
     elif '开启红包提醒' in talk or '开启红包预警' in talk or '红包提示' in talk:
-        if qname in hongbao_list:
+        if qname in red_packet_list:
             return '已经开启红包提醒咯~'
-        hongbao_list.append(qname)
+        red_packet_list.append(qname)
         return '红包提醒已打开'
     elif '关闭红包提醒' in talk or '关闭红包预警' in talk:
         try:
-            hongbao_list.remove(qname)
+            red_packet_list.remove(qname)
             return '红包提醒已关闭~'
         except Exception as e:
             print(e, '该值不存在')
@@ -608,8 +612,8 @@ def text_reply(msg):  # 处理群消息
     elif qname in qun_list:
         if "小白" in talk:
             talk = talk.replace('小白', '菲菲')
-        ress = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
-        re = ress.json()["content"]
+        result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
+        re = result.json()["content"]
         if '{br}' in re:
             re = re.replace('{br}', '\n')
         if '菲菲' in re:
@@ -635,9 +639,9 @@ def note_reply(msg):
     # print("通知消息来了", msg)
     qname = msg['User']['UserName']
     try:
-        tname = msg['User']['NickName']
+        t_name = msg['User']['NickName']
     except Exception as e:
-        tname = ''
+        t_name = ''
         print(e)
         print(msg)
     now = time.strftime("%H:%M:%S")
@@ -645,27 +649,23 @@ def note_reply(msg):
     # 转换成新的时间格式(2016-05-05 20:28:54)
     dt = time.strftime("%H:%M:%S", time_local)
     if now > dt:
-        print(tname + dt + "now" + now)
+        print(t_name + dt + "now" + now)
         now = dt
     talk = '发红包了 时间：' + now
     this = msg['User']['Self']['NickName']
     if '收到红包，请在手机上查看' == msg['Content']:
-        if tname in hongbao_list:
+        if t_name in red_packet_list:
             itchat.send(talk, qname)
         return
-    # elif '红包'in msg['Text']:
-    #     itchat.send(talk, qname)
-    #     print('note:Text：', msg['Text'])
-    #     print('群里发红包了')
     elif '加入了群聊' in msg['Content']:
         new = msg['Content'].split()
         s = new[0].split('"')
         if len(s) >= 4:
             if s[4] == '加入了群聊':
                 itchat.send(msg['Content'], qname)
-                if '珠峰' in tname:
-                    itchat.send('欢迎"' + s[3] + '"新朋友，出来报道，请爆照.积极发言，发红包,多参加活动 分享过去的活动图片！不可以发与珠峰群无关的广告，链接和小程序！否则请出！谢谢配合！',
-                                qname)
+                if '珠峰' in t_name:
+                    itchat.send('欢迎"' + s[3] + '"新朋友，出来报道，请爆照.积极发言，发红包,多参加活动 分享过去的活动图片'\
+                                                '！不可以发与珠峰群无关的广告，链接和小程序！否则请出！谢谢配合！', qname)
                 else:
                     itchat.send('欢迎"' + s[3] + '"新朋友', qname)
                 return
@@ -828,68 +828,68 @@ def SYSTEM_reply(msg):
 
 
 def set_info():
-    with open('config.txt', 'w', encoding='utf-8') as f:
-        f.write('.'.join(qun_list))
-        f.write('---')
-        f.write('.'.join(user_list))
-        f.write('---')
-        f.write(json.dumps(gamedict))
-        f.write('---')
-        f.write('.'.join(userchengyu_list))
-        f.write('---')
-        f.write('.'.join(hongbao_list))
-        f.write('---')
-        f.write('.'.join(chengyu_list))
-        f.write('---')
-        f.write(str(this_num))
-        f.write('---')
-        f.write('.'.join(ana_list))
-        f.close()
+    with open('config.txt', 'w', encoding='utf-8') as file:
+        file.write('.'.join(qun_list))
+        file.write('---')
+        file.write('.'.join(user_list))
+        file.write('---')
+        file.write(json.dumps(game_dict))
+        file.write('---')
+        file.write('.'.join(user_idiom_list))
+        file.write('---')
+        file.write('.'.join(red_packet_list))
+        file.write('---')
+        file.write('.'.join(idiom_list))
+        file.write('---')
+        file.write(str(this_num))
+        file.write('---')
+        file.write('.'.join(ana_list))
+        file.close()
     return "存档成功"
 
 
 def get_info():
-    global qun_list, user_list, gamedict, userchengyu_list, hongbao_list, chengyu_list, this_num, ana_list
-    with open('config.txt', 'r', encoding='utf-8') as f:
-        aa = f.readlines()
+    global qun_list, user_list, game_dict, user_idiom_list, red_packet_list, idiom_list, this_num, ana_list
+    with open('config.txt', 'r', encoding='utf-8') as file:
+        aa = file.readlines()
         a_list = aa[0].split('---')
         if len(a_list) == 8:
             qun_list = a_list[0].split('.')
             try:
                 qun_list.remove('')
-            except:
+            except Exception:
                 pass
             user_list = a_list[1].split('.')
             try:
                 user_list.remove('')
-            except:
+            except Exception:
                 pass
-            gamedict = json.loads(a_list[2])
-            userchengyu_list = a_list[3].split('.')
+            game_dict = json.loads(a_list[2])
+            user_idiom_list = a_list[3].split('.')
             try:
-                userchengyu_list.remove('')
-            except:
+                user_idiom_list.remove('')
+            except Exception:
                 pass
-            hongbao_list = a_list[4].split('.')
+            red_packet_list = a_list[4].split('.')
             try:
-                hongbao_list.remove('')
-            except:
+                red_packet_list.remove('')
+            except Exception:
                 pass
-            chengyu_list = a_list[5].split('.')
+            idiom_list = a_list[5].split('.')
             try:
-                chengyu_list.remove('')
-            except:
+                idiom_list.remove('')
+            except Exception:
                 pass
             this_num = int(a_list[6])
             ana_list = a_list[7].split('.')
             try:
                 ana_list.remove('')
-            except:
+            except Exception:
                 pass
             res = "读档成功"
         else:
             res = "读档失败"
-        f.close()
+        file.close()
     return res
 
 
@@ -897,14 +897,14 @@ if __name__ == '__main__':
     try:
         # 登录
         itchat.auto_login()
-    
+        
         # # 发送消息
         # itchat.send(u'你好', 'filehelper')
         # 获取好友列表
         # friends = itchat.get_friends(update=True)
         # 初始化计数器，有男有女，当然，有些人是不填的
         # male = female = other = 0
-    
+        
         # 遍历这个列表，列表里第一位是自己，所以从"自己"之后开始计算 1表示男性，2女性
         # for i in friends[1:]:
         #     # print(i)
@@ -915,7 +915,7 @@ if __name__ == '__main__':
         #         female += 1
         #     else:
         #         other += 1
-    
+        
         # 总数算上，好计算比例啊～
         # total = len(friends[1:])
         # print('好友总数', total)
@@ -923,9 +923,8 @@ if __name__ == '__main__':
         # print(u"女性好友：%.2f%%" % (float(female) / total * 100))
         # print(u"其他：%.2f%%" % (float(other) / total * 100))
         itchat.run()
-    except Exception as e:
+    except Exception:
         with open('chat/error.log', 'a') as f:
             f.write('*' * 100 + "\n")
             f.write(traceback.format_exc())  # 使用 traceback.format_exc() 获取异常详细信息
             f.write('*' * 100 + "\n")
-
