@@ -44,6 +44,12 @@ def get_data_length(message):
 
 # 解析web端提交的bytes信息，返回str信息（可以解析中文信息）
 def parse_data(message):
+    """
+    :param message: 需要解析的入参消息
+    :type message: bytes
+    :return: 返回str信息（可以解析中文信息） 失败为空
+    :rtype: str
+    """
     global g_code_length
     try:
         g_code_length = message[1] & 127
@@ -86,7 +92,7 @@ def parse_data(message):
         else:
             res = en_bytes.decode()
     except Exception as e:
-        print("解析消息出错：", e)
+        # print("解析消息出错：", message, e)
         # if not res:
         res = ""
     return res
@@ -328,6 +334,7 @@ class WebSocket(threading.Thread):
                                     if int(loop_time.tm_sec) >= 30:
                                         print("收到心跳并已回复" + nowTime)
                                         return_time = nowTime
+                        print(recv_message)
                         g_code_length = 0
                         self.length_buffer = 0
                         self.buffer_utf8 = b""
@@ -371,10 +378,8 @@ if __name__ == "__main__":
     server = WebSocketServer()
     # server.begin()
     t = threading.Thread(target=server.begin, name="线程消息", args=())
-    # t2 = threading.Thread(target=xintiao, name="心跳", args=(ws,))
     print("ws启动了")
     t.start()
-    # t2.start()
     while True:
         # if ws.state == -1:
         #     break

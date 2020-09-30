@@ -23,6 +23,19 @@ class CommonMethod(object):
             else:
                 date_dict[i] = self.temp.get(i) if self.temp.get(i) else ''
         return date_dict
+    
+    @classmethod
+    def common_check_required(cls, date_dict, *args):
+        result = False
+        if not args:
+            return None
+        result_list = []
+        for i in args:
+            if date_dict[i] is not None and date_dict[i] != '':
+                result_list.append(i)
+        if len(result_list) == len(args):
+            result = True
+        return result
 
 
 if __name__ == '__main__':

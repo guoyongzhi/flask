@@ -1,7 +1,7 @@
 from aip import AipSpeech
 import os
 from uuid import uuid4
-from wav2pcm import wav_to_pcm
+# from wav2pcm import wav_to_pcm
 
 APP_ID = '14452531'
 API_KEY = 'zdU6ldOh7CeQvFFzw9GWhwZr'
