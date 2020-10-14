@@ -35,7 +35,7 @@ class logs(object):
         # if not logging.handlers:
         # 控制台句柄
         console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
+        console.setLevel(logging.DEBUG)
         console.setFormatter(formatter)
         # 添加内容到日志句柄中
         self.logger.addHandler(rotatingFileHandler)
