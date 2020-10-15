@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # result = pay_send_car('192.168.11.158', 5, date_time='2020-10-12')
     # print(result)
     a = 1
-    while a <= 27:
+    while a <= 28:
         nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         print("当前时间{0}进入第{1}轮测试".format(nowTime, a))
         datetime = time.strftime('%Y-%m-%d', time.localtime(time.time()))

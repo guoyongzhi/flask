@@ -21,16 +21,23 @@ print(r.get('name').decode('utf8'))
 # r = redis.Redis(connection_pool=pool)
 
 
-class db_redis():
-    def __init__(self, db):
+class db_redis(object):
+    def __init__(self, db=0):
         pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz', max_connections=15)
-        if db:
+        if db != 0:
             self.r = redis.Redis(connection_pool=pool, db=db)
         else:
             self.r = redis.Redis(connection_pool=pool)
     
-    def set_value(self, name, value):
-        self.r.set(name=name, value=value)
+    def set_value(self, name, value, ex=0, px=0):
+        if ex and px:
+            self.r.set(name=name, value=value, ex=ex, px=px)
+        elif px:
+            self.r.set(name=name, value=value, px=px)
+        elif ex:
+            self.r.set(name=name, value=value, ex=ex)
+        else:
+            self.r.set(name=name, value=value)
         return True
     
     def get_owner(self, owner):
@@ -42,16 +49,16 @@ class db_redis():
 
 
 # user_info = dict(id=1, name='小明', age=18)
-# user_info = dict(pai=1, jifen=20, jinbi=201)
-# db_redis().set_value(name='85197', value=json.dumps(user_info))
+user_info = dict(pai=1, jifen=20, jinbi=201)
+db_redis().set_value(name='85197', value=json.dumps(user_info), ex=30 * 60)
 # print(r.keys())
 # print(r.info())
 # print(r)
-# owner = db_redis().get_owner('85197')
-# if not owner:
-#     print(owner)
-# else:
-#     print(json.loads(owner.decode('utf8')))
+owner = db_redis().get_owner('85197')
+if not owner:
+    print(owner)
+else:
+    print(json.loads(owner.decode('utf8')))
 # # print(r.get('redisutil').decode('utf8'))
 # # db_redis().delete(name='1')
 # nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -59,7 +66,7 @@ class db_redis():
 # return_time = '2020-10-10 18:00:00'
 # if t_now > return_time:
 #     print(11111)
-#
+
 # new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
 # old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
 # print(nowTime, return_time)

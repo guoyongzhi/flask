@@ -19,18 +19,19 @@ user_list = []
 user_idiom_list = []
 ana_list = []
 ret_dict = dict()
+At_who = '郭'
 
 
 @itchat.msg_register(itchat.content.TEXT)  # 私发消息
 def text_reply(msg):  # 处理私人消息
     # msg = "努力上班中，晚点回复！"
-    global user_list, user_idiom_list, ana_list, ret_dict
+    global user_list, user_idiom_list, ana_list, ret_dict, At_who
     talk = msg.text
     print(msg['User']['NickName'], msg['User']['RemarkName'], talk)
     name = msg['User']['RemarkName']
     if not name:  # 当没有备注时取微信名称
         name = msg['User']['NickName']
-    if name == '机器人_菲菲':
+    if name == At_who:
         if talk[:1] == '@' or talk[:1] == 'T':
             try:
                 ta_list = talk.split()
@@ -104,17 +105,19 @@ def text_reply(msg):  # 处理私人消息
     elif '读档' == talk:
         res = get_info()
         return res
+    elif '设置转发' == talk[:4]:
+        At_who = talk[4:]
     elif name in user_idiom_list:
         return chengyujielong(talk, name)
     elif name in user_list:
-        if "小白" in talk:
-            talk = talk.replace('小白', '菲菲')
+        # if "小白" in talk:
+        #     talk = talk.replace('小白', '菲菲')
         result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
         re = result.json()["content"]
         if '{br}' in re:
             re = re.replace('{br}', '\n')
-        if '菲菲' in re:
-            re = re.replace('菲菲', '小白')
+        # if '菲菲' in re:
+        #     re = re.replace('菲菲', '小白')
         print(name, "--私聊：{}  ({})".format(re, datetime.now()))
         return re
     elif name in ana_list:
@@ -122,7 +125,7 @@ def text_reply(msg):  # 处理私人消息
         return a.split()[0]
     else:
         talk_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        he_talk = itchat.search_friends(name='郭')
+        he_talk = itchat.search_friends(name=At_who)
         if name in ret_dict:
             last_time = ret_dict[name]
             lo_time = datetime.strptime(talk_time, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,
@@ -156,7 +159,7 @@ sign_in_list = []
 def text_reply(msg):  # 处理群消息
     global pai, this_num, game_dict, qun_list, idiom_list, red_packet_list, Num_bomb_dict, sign_in_list
     try:
-        print(msg)
+        # print(msg)
         ActualUserName = msg['ActualUserName']  # 用户名称（腾讯用内置）
         talk = msg['Content']
         this = msg['User']['Self']['DisplayName']
@@ -352,8 +355,10 @@ def text_reply(msg):  # 处理群消息
                     return '@' + who_talk + ' 成语接龙：' + chengyujielong(talk, qname)
                 except Exception as e:
                     print(e, '该值不存在')
-            elif '点歌' == talk or '播放' == talk:
+            elif '点歌' == talk[:2] or '播放' == talk[:2]:
                 name = talk.split()
+                if talk[2:] == '':
+                    return '亲点歌格式不对哦~ 点歌请艾特我回复点歌 【歌名】'
                 if len(name) > 1:
                     songname = name[1]
                 elif len(name) == 1:
@@ -491,14 +496,14 @@ def text_reply(msg):  # 处理群消息
                     fzhuan = random.randint(0, 1)
                     if fzhuan == 0:
                         if setjinbi > 0:
-                            to = random.randint(0, setjinbi)
+                            to = random.randint(1, int(setjinbi * 0.4))
                             setjinbi = setjinbi - to
                             getjinbi = getjinbi + to
                             game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3]
                             game_dict[who] = setpai, setjifen, setjinbi, whoset[3]
                             return '😂[' + who_talk + '] 抢劫 [' + who + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
                     else:
-                        to = random.randint(0, getjinbi)
+                        to = random.randint(1, int(getjinbi * 0.2))
                         setjinbi += to
                         getjinbi -= to
                         game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3]
@@ -830,14 +835,14 @@ def text_reply(msg):  # 处理群消息
     if qname in idiom_list:
         return '@' + who_talk + '\u2005成语接龙-我接：' + chengyujielong(talk, qname)
     elif qname in qun_list:
-        if "小白" in talk:
-            talk = talk.replace('小白', '菲菲')
+        # if "小白" in talk:
+        #     talk = talk.replace('小白', '菲菲')
         result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
         re = result.json()["content"]
         if '{br}' in re:
             re = re.replace('{br}', '\n')
-        if '菲菲' in re:
-            re = re.replace('菲菲', '小白')
+        # if '菲菲' in re:
+            # re = re.replace('菲菲', '小白')
         print(qname, "--群聊：{}  ({})".format(re, datetime.now()))
         return re
     elif qname in ana_list:
@@ -850,7 +855,6 @@ def text_reply(msg):  # 处理群消息
                 idiom_list.append(qname)
                 return '@' + who_talk + " 成语接龙开始咯：" + res
             else:
-                itchat.config
                 return '@' + who_talk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'
         if who == this:
             return "抱歉~ 暂时不明白您说什么呢"
