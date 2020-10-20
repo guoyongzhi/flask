@@ -1,8 +1,8 @@
 from IPython.core.interactiveshell import InteractiveShell
+from pypinyin import pinyin, lazy_pinyin, Style
+import random
 
 InteractiveShell.ast_node_interactivity = "all"
-
-from pypinyin import pinyin, lazy_pinyin, Style
 
 idiom_dic = {}
 idiom_list = []
@@ -11,7 +11,7 @@ idiom_char_dic = {}
 with open('coal_dict.txt', 'r', encoding='utf8') as r:
     for line in r:
         line = line.strip()
-        if None == line or line == '':
+        if line is None or line == '':
             continue
         idiom_list.append(line)
         key = lazy_pinyin(line)[0]
@@ -47,8 +47,7 @@ def idiom_next_char(idiom, polyphone=False):
                 aa_list = aa.split(',')
                 bb_list = bb.split(',')
                 cd_list = set(aa_list).intersection(set(bb_list))  # 求并集
-                res = ','.join(cd_list)
-                res = res.split(',')
+                res = cd_list
         else:
             if last not in idiom_char_dic:
                 res = idiom + ' 这不是个成语哦'
@@ -114,40 +113,36 @@ def check_none_follow_list():
     return none_follow
 
 
-import random
-
 users_list = []
 nn = ''
-dict = dict()
+idiom_dict = dict()
 
 
 def chengyujielong(s='', name=''):
-    global nn, users_list,dict
+    global nn, users_list, idiom_dict
     if s == '':
         users_list = []
         current_word = idiom_list[random.randint(0, len(idiom_list) - 1)]
         nn = current_word
         users_list.append(current_word)
-        dict[name] = nn, users_list
+        idiom_dict[name] = nn, users_list
         return current_word
     try:
-        if name in dict:
-            new = dict[name]
-            # print(new, type(new))
-            # nn_list = new.split(',')
+        if name in idiom_dict:
+            new = idiom_dict[name]
             nn = new[0]
             users_list = new[1]
             if s == '退出':
                 nn = ''
                 users_list = []
-                del [dict[name]]
+                del [idiom_dict[name]]
                 return '已退出，下次想玩可以回复成语接龙或打开成语接龙！'
             if s == '下一个' or s == '换词':
                 current_word = idiom_list[random.randint(0, len(idiom_list) - 1)]
                 users_list = []
                 nn = current_word
                 users_list.append(current_word)
-                dict[name] = nn, users_list
+                idiom_dict[name] = nn, users_list
                 return current_word
             else:
                 wei = nn[len(nn) - 1]
@@ -172,18 +167,18 @@ def chengyujielong(s='', name=''):
                                             for n in users_list:
                                                 if n == i:
                                                     res_list.remove(i)
-                                    
                                     nn = res_list[random.randint(0, len(res_list) - 1)]
                                     users_list.append(s)
                                     users_list.append(nn)
-                                    dict[name] = nn, users_list
+                                    idiom_dict[name] = nn, users_list
+                                    print(nn, users_list)
                                     return nn
-                            except:
+                            except Exception:
                                 current_word = idiom_list[random.randint(0, len(idiom_list) - 1)]
                                 users_list = []
                                 nn = current_word
                                 users_list.append(current_word)
-                                dict[name] = nn, users_list
+                                idiom_dict[name] = nn, users_list
                                 return u'接龙:是在下输了! 重新开始吧：' + nn
                         else:
                             return '亲，该词说过了，换个试试吧！ 当前成语：' + nn
@@ -194,7 +189,7 @@ def chengyujielong(s='', name=''):
                 if type(res_list) is list:
                     nn = res_list[random.randint(0, len(res_list) - 1)]
                     users_list.append(nn)
-                    dict[name] = nn, users_list
+                    idiom_dict[name] = nn, users_list
                     return nn
                 else:
                     return ''

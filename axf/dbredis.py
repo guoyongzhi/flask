@@ -48,28 +48,29 @@ class db_redis(object):
         return True
 
 
-# user_info = dict(id=1, name='小明', age=18)
-user_info = dict(pai=1, jifen=20, jinbi=201)
-db_redis().set_value(name='85197', value=json.dumps(user_info), ex=30 * 60)
-# print(r.keys())
-# print(r.info())
-# print(r)
-owner = db_redis().get_owner('85197')
-if not owner:
-    print(owner)
-else:
-    print(json.loads(owner.decode('utf8')))
-# # print(r.get('redisutil').decode('utf8'))
-# # db_redis().delete(name='1')
-# nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-# t_now = time.strftime('%Y-%m-%d', time.localtime(time.time())) + ' 00:00:00'
-# return_time = '2020-10-10 18:00:00'
-# if t_now > return_time:
-#     print(11111)
-
-# new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
-# old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
-# print(nowTime, return_time)
-# loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
-# print(loop_time)
+if __name__ == '__main__':
+    user_info = dict(id=1, name='小明', age=18)
+    # user_info = dict(pai=1, jifen=20, jinbi=201)
+    db_redis().set_value(name='85197', value=json.dumps(user_info), ex=30 * 60)
+    # # print(r.keys())
+    # # print(r.info())
+    # # print(r)
+    # owner = db_redis().get_owner('85197')
+    # if not owner:
+    #     print(owner)
+    # else:
+    #     print(json.loads(owner.decode('utf8')))
+    # # print(r.get('redisutil').decode('utf8'))
+    # # db_redis().delete(name='1')
+    # nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    # t_now = time.strftime('%Y-%m-%d', time.localtime(time.time())) + ' 00:00:00'
+    # return_time = '2020-10-10 18:00:00'
+    # if t_now > return_time:
+    #     print(11111)
+    
+    # new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
+    # old_time = time.strptime(return_time, '%Y-%m-%d %H:%M:%S')
+    # print(nowTime, return_time)
+    # loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
+    # print(loop_time)
 

@@ -3,24 +3,24 @@ import hashlib
 import json
 import os
 import struct
-import threading
-import logger
+# import threading
+# import logger
 import flask
-import time
-import requests
+# import time
+# import requests
 
 from flask import *
 from werkzeug.utils import secure_filename
 from app.src.openpyxl_excel import openpyxl_excel
 from app.src.common_method import CommonMethod
 from setting import APP_ROOT
-from app.src import openpyxl_excel
+# from app.src import openpyxl_excel
 from app import app
 from flask import request, render_template, make_response, send_from_directory, jsonify, json_available, url_for
-from app.Common_max import car_num
+# from app.Common_max import car_num
 
-from flask.views import MethodView
-from flask_login import login_required, current_user
+# from flask.views import MethodView
+# from flask_login import login_required, current_user
 
 from app.src import openpyxl_excel
 from app.len_one.smin_send_car import *

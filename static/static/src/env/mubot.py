@@ -48,6 +48,7 @@ class mubot(object):
         content = "".join(aaa)
         print("正在合成小说：", filename)
         changdu = len(content)
+        # print(content, changdu)
         res = bytes()
         if changdu % 2048 == 0:
             for i in range(0, int(changdu / 2048)):
@@ -63,12 +64,12 @@ class mubot(object):
             except:
                 print("错误返回dict" + filename)
         else:
-            for i in range(0, int(changdu / 2048) + 1):
+            for i in range(1, int(changdu / 2048) + 1):
                 a = self.Get_WenBen(filename, i)
                 try:
                     res += self.wenben_get_yuyin(a)
-                except:
-                    print("错误返回dict" + filename, i)
+                except Exception as e:
+                    print("错误返回dict" + filename, i, e)
                     # 识别正确返回语音二进制 错误则返回dict 参照下面错误码
         if not isinstance(res, dict):
             mp3name = Bigtit + '\\语言\\' + litit + '.mp3'
@@ -87,6 +88,7 @@ class mubot(object):
             'pit': 7,  # 语调
             'spd': 6  # 语速
         })
+        # print(result)
         return result
 
     def Get_WenBen(self, filename, lenth):
@@ -96,7 +98,7 @@ class mubot(object):
         am = f.readlines()
         for a in am:
             changdu += len(a)
-            if 2048 * lenth <= changdu < 2048 * (lenth + 1):
+            if 2048 * (lenth - 1) <= changdu < 2048 * lenth:
                 a = a.rstrip()
                 a = a.lstrip()
                 ab += a
@@ -115,5 +117,5 @@ class mubot(object):
 
 
 # mubot().get_zhang()
-mubot().delbialline()
-# mubot().get_len("最佳赘婿", "第902章")
+# mubot().delbialline()
+mubot().get_len(r"I:\work\flask\static\static\src\env", "政治")

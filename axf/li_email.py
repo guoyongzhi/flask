@@ -73,4 +73,4 @@ def send_email(title, content, recipients, accessory):     # 带附件
 # send_email('接口自动化测试报告', '用例执行情况,见附件', ['1983496818@qq.com', '447397151@qq.com'], filename)
 
 
-get_mail('蒙哥收', '蒙哥哈哈哈', '370192371@qq.com')
+# get_mail('蒙哥收', '蒙哥哈哈哈', '370192371@qq.com')
