@@ -1172,10 +1172,6 @@ def func():
 def run():
     print("先初始化再启动")
     config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"config")
-    if os.path.exists(config_dir) and os.path.isdir(config_dir):
-        pass
-    else:
-        os.mkdir(config_dir)
     config_path = os.path.join(config_dir, 'game_config.ini')
     print(config_path)
     get_info()
