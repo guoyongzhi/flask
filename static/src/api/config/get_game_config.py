@@ -9,12 +9,12 @@ class Config(object):
         # print(config_path)
         self.path = config_path
         self.cf = configparser.ConfigParser()
-        self.cf.read(self.path)
+        self.cf.read(self.path, encoding="utf-8-sig")
     
-    def get_PU(self, Pu_name, dd_name):
+    def get_pu(self, pu_name, dd_name):
         # print(Pu_name, dd_name)
         # print(self.cf.sections())
-        st = self.cf.get(Pu_name, dd_name)
+        st = self.cf.get(pu_name, dd_name)
         # print(self.cf.options('basics'))
         return st
     
@@ -28,4 +28,5 @@ class Config(object):
 
 
 if __name__ == '__main__':
-    Config().get_PU('basics', 'welcome')
+    print(Config().get_pu('basics', 'welcome'))
+    print(Config().get_pu('basics', 'goodbye'))

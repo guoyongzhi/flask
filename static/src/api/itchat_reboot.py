@@ -11,6 +11,7 @@ import traceback
 
 from static.src.api.chengyujielong import chengyujielong, idiom_dic, users_list
 from static.src.api.count.read_name_all_info import read_name_all_info
+from static.src.api.config.get_game_config import Config
 from axf.dbredis import db_redis
 
 import requests
@@ -19,16 +20,18 @@ user_list = []
 user_idiom_list = []
 ana_list = []
 ret_dict = dict()
-At_who = '郭'
+At_who = ''
 
 
 @itchat.msg_register(itchat.content.TEXT)  # 私发消息
 def text_reply(msg):  # 处理私人消息
     # msg = "努力上班中，晚点回复！"
     global user_list, user_idiom_list, ana_list, ret_dict, At_who
+    print(msg)
     talk = msg.text
     print(msg['User']['NickName'], msg['User']['RemarkName'], talk)
     name = msg['User']['RemarkName']
+    fromUserName = msg['FromUserName']
     if not name:  # 当没有备注时取微信名称
         name = msg['User']['NickName']
     if name == At_who:
@@ -65,12 +68,17 @@ def text_reply(msg):  # 处理私人消息
                 print(e)
                 return '发送失败'
     if talk == '开始聊天' or talk == '开启聊天':
+        talk_list = db_redis(db=3).get_owner(owner='talk')
+        print(talk_list)
         if name in user_list:
             return '已经开始聊天咯~'
         user_list.append(str(name))
+        db_redis(db=3).set_value(name='talk', value=str(user_list))
         return '你好呀！我的小可爱'
     elif talk == '结束聊天' or talk == '关闭聊天' or talk == '不聊了':
         try:
+            talk_list = db_redis(db=3).get_owner(owner='talk')
+            print(talk_list)
             user_list.remove(str(name))
             return '拜拜~'
         except Exception as e:
@@ -126,6 +134,8 @@ def text_reply(msg):  # 处理私人消息
     else:
         talk_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         he_talk = itchat.search_friends(name=At_who)
+        if not he_talk:
+            return
         if name in ret_dict:
             last_time = ret_dict[name]
             lo_time = datetime.strptime(talk_time, '%Y-%m-%d %H:%M:%S') - datetime.strptime(last_time,
@@ -153,17 +163,20 @@ idiom_list = []
 red_packet_list = []
 Num_bomb_dict = dict()
 sign_in_list = []
+welcome = goodbye = ''
 
 
 @itchat.msg_register(itchat.content.TEXT, isGroupChat=True)  # 群消息（群游戏）
 def text_reply(msg):  # 处理群消息
     global pai, this_num, game_dict, qun_list, idiom_list, red_packet_list, Num_bomb_dict, sign_in_list
     try:
-        # print(msg)
+        print(msg)
         ActualUserName = msg['ActualUserName']  # 用户名称（腾讯用内置）
         talk = msg['Content']
         this = msg['User']['Self']['DisplayName']
+        thisUserName = msg['User']['Self']['UserName']
         qname = msg['User']['NickName']
+        qun_user_name = msg['FromUserName']
         who_talk = msg['ActualNickName']
         who = ''
         if not this:  # 当没有备注时取微信名称
@@ -211,6 +224,7 @@ def text_reply(msg):  # 处理群消息
                             if t_name == '':
                                 t_name = i['NickName']
                             if t_name == who:
+                                whoUserName = i['UserName']
                                 dd = 1
                                 break
                         if dd == 1:
@@ -282,6 +296,7 @@ def text_reply(msg):  # 处理群消息
                             if t_name == '':
                                 t_name = i['NickName']
                             if t_name == who:
+                                whoUserName = i['UserName']
                                 dd = 1
                                 break
                         if dd == 1:
@@ -622,11 +637,11 @@ def text_reply(msg):  # 处理群消息
         if qname in qun_list:
             return '已经开始聊天咯~'
         qun_list.append(qname)
-        return '你们好呀！我的小可爱们'
+        return welcome
     elif '结束聊天' == talk or '关闭聊天' == talk or '不聊了' == talk:
         try:
             qun_list.remove(qname)
-            return '拜拜~'
+            return goodbye
         except Exception as e:
             print(e, '该值不存在')
     elif '开启红包提醒' == talk or '开启红包预警' == talk or '红包提示' == talk:
@@ -643,14 +658,14 @@ def text_reply(msg):  # 处理群消息
     elif talk == '取消名言名句' or talk == '关闭名言名句' or talk == '退出名言名句':
         try:
             ana_list.remove(str(qname))
-            return '拜拜~'
+            return goodbye
         except Exception as e:
             print(e, '该值不存在')
     elif '名言名句' == talk:
         if qname in ana_list:
             return '已经开始发送名言名句咯~'
         ana_list.append(str(qname))
-        return '你好呀！我的小可爱'
+        return welcome
     elif '签到' == talk:
         if who_talk not in game_dict:
             pai += 1
@@ -757,11 +772,11 @@ def text_reply(msg):  # 处理群消息
         if qname in qun_list:
             return '已经开始聊天咯~'
         qun_list.append(qname)
-        return '你们好呀！我的小可爱们'
+        return welcome
     elif '结束聊天' == talk or '关闭聊天' == talk or '不聊了' == talk:
         try:
             qun_list.remove(qname)
-            return '拜拜~'
+            return goodbye
         except Exception as e:
             print(e, '该值不存在')
     elif '菜单' in talk or '帮助' in talk or 'help' in talk:
@@ -793,11 +808,11 @@ def text_reply(msg):  # 处理群消息
             a1, c, d = Num_bomb_dict[qname]
             return '踩雷游戏已开启，当前 ' + c + ' 到 ' + d + " 呢!"
         Num_bomb_dict[qname] = random.randint(0, 100), 0, 100
-        return "你好呀！我的小可爱。踩雷开始咯 当前 0 到 100 呢"
+        return welcome + " 踩雷开始咯 当前 0 到 100 呢"
     elif talk == '取消踩雷' or talk == '关闭踩雷' or talk == '退出踩雷':
         try:
             del Num_bomb_dict[str(qname)]
-            return '拜拜~'
+            return goodbye
         except Exception as e:
             print(e, '该值不存在')
     elif qname in Num_bomb_dict:  # 踩雷游戏
@@ -1168,6 +1183,12 @@ def func():
     # timing.start()
     
 
+def set_common_return_info():
+    global welcome, goodbye
+    welcome = Config().get_pu('basics', 'welcome')
+    goodbye = Config().get_pu('basics', 'goodbye')
+
+
 # 初始化函数（读配置文件、更新缓存）
 def run():
     print("先初始化再启动")
@@ -1175,7 +1196,9 @@ def run():
     config_path = os.path.join(config_dir, 'game_config.ini')
     print(config_path)
     get_info()
-    pass
+    set_common_return_info()
+    print("初始化完成")
+    return True
 
 
 # 手动退出（建议使用，先保存数据再退出）

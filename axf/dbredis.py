@@ -16,20 +16,32 @@ print(r.get('name').decode('utf8'))
 当程序创建数据源实例时，系统会一次性创建多个数据库连接，并把这些数据库连接保存在连接池中，当程序需要进行数据库访问时，
 无需重新新建数据库连接，而是从连接池中取出一个空闲的数据库连接
 '''
-# pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz')  # 实现一个连接池
-
-# r = redis.Redis(connection_pool=pool)
 
 
 class db_redis(object):
     def __init__(self, db=0):
-        pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz', max_connections=15)
         if db != 0:
-            self.r = redis.Redis(connection_pool=pool, db=db)
+            pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz',
+                                        decode_responses=True, max_connections=2, db=db)
         else:
-            self.r = redis.Redis(connection_pool=pool)
+            pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz',
+                                        decode_responses=True, max_connections=2)
+        self.r = redis.Redis(connection_pool=pool, decode_responses=True)
     
     def set_value(self, name, value, ex=0, px=0):
+        """
+        设置缓存
+        :param name: 键
+        :type name: str
+        :param value: 值
+        :type value: str
+        :param ex:延时过期秒数
+        :type ex: int
+        :param px:延时过期毫秒数
+        :type px:int
+        :return:执行结果
+        :rtype:bool
+        """
         if ex and px:
             self.r.set(name=name, value=value, ex=ex, px=px)
         elif px:
@@ -40,18 +52,86 @@ class db_redis(object):
             self.r.set(name=name, value=value)
         return True
     
+    def batch_set_value(self, parameters=None, **kwargs):
+        """
+        批量设置
+        :param parameters: 参数集合
+        :type parameters: dictionary
+        :param args:
+        :type args:
+        :param kwargs:
+        :type kwargs:
+        :return: 成功或失败
+        :rtype: bool
+        """
+        if kwargs:
+            if parameters:
+                for k in kwargs.keys():
+                    parameters[k] = kwargs[k]
+                self.r.mset(parameters)
+            else:
+                self.r.mset(kwargs)
+        else:
+            if parameters:
+                self.r.mset(parameters)
+            else:
+                return False
+        return True
+    
+    def batch_get_value(self, keys=None):
+        """
+        批量获取参数
+        :param keys: key 按list排列
+        :type keys:list
+        :return:返回按 keys 顺序排列的值列表
+        :rtype:list
+        """
+        if keys:
+            res = self.r.mget(keys)
+        else:
+            return 'Error'
+        return res
+    
+    def get_set_value(self, key, value):
+        """
+        设置新值并获取原来的值
+        :param key: 键名
+        :type key: str
+        :param value: 值
+        :type value: str
+        :return: 旧值
+        :rtype: str
+        """
+        keys = self.r.keys()
+        if bytes(key, encoding='utf-8') in keys:
+            res = self.r.getset(key, value)
+        else:
+            return 'Error'
+        return res
+    
     def get_owner(self, owner):
         return self.r.get(name=owner)
     
     def delete(self, name):
-        self.r.delete(name)
+        keys = self.r.keys()
+        if bytes(name, encoding='utf-8') in keys:
+            self.r.delete(name)
+        else:
+            return False
         return True
 
 
 if __name__ == '__main__':
     user_info = dict(id=1, name='小明', age=18)
     # user_info = dict(pai=1, jifen=20, jinbi=201)
-    db_redis().set_value(name='85197', value=json.dumps(user_info), ex=30 * 60)
+    # user_info = [12, 13, 14]
+    # print(db_redis().get_set_value('foo', json.dumps(user_info)))
+    print(json.loads(db_redis().get_owner('foo')))
+    # print(db_redis().batch_get_value(user_info))
+    # a = 85197
+    # for i in range(10):
+    #     db_redis(db=1).set_value(name=str(a), value=json.dumps(user_info))
+    #     a += 1
     # # print(r.keys())
     # # print(r.info())
     # # print(r)

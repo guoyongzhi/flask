@@ -71,7 +71,6 @@ def pay_send_car(host, count, date_time):
     paySendOutCar = logger.logs('paySendOutCar' + date_time)
     while len(out_list) != len(int_list):
         index = random.randint(0, len(int_list) - 1)
-        # print(index, int_list, out_list)
         cl = int_list[index]
         if cl in out_list:
             continue

@@ -1,9 +1,10 @@
 # 群表(id，群名称，微信群名称)
 GroupChat_table_sql = 'create table GroupChat(id integer PRIMARY KEY AUTOINCREMENT not NULL,name text, username text)'
-# 用户表（id，群id，用户名称，昵称，微信用户名称，签到排名，积分，金币，签到时间，添加时间）
+# 用户表（id，群id，用户名称，昵称，微信用户名称，签到排名，积分，金币，签到时间，战斗力，隐藏分，添加时间）
 users_table_sql = 'create table users(id integer PRIMARY KEY AUTOINCREMENT not NULL,' \
                   'GroupChat_id int,name text, nickname text, username text,' \
-                  ' sign_toList int, integral int, gold int, signTime text, addTime text)'
+                  ' sign_toList int, integral int, gold int, signTime text, ' \
+                  'fightingCombat int, hiddenScore int, addTime text)'
 # 背包表（id，用户id，是否装配（0未装配、1装配），道具id，道具数量）
 Backpack_table_sql = 'create table Backpack(id integer PRIMARY KEY AUTOINCREMENT not NULL, user_id int, isDress int,' \
                      'prop_id int, propCount int)'
@@ -13,9 +14,9 @@ shop_table_sql = 'create table shop(id integer PRIMARY KEY AUTOINCREMENT not NUL
 # 怪物表（id，怪物名称，怪物星级，怪物血量，怪物介绍，怪物属性）
 monster_table_sql = 'create table monster(id integer PRIMARY KEY AUTOINCREMENT not NULL,' \
                     ' name text, starLevel int, blood int, recommend text, property text)'
-# 道具表（id，道具名称，是否为碎片，碎片合成数（30），当前数量，道具介绍，道具属性）
+# 道具表（id，道具名称，是否为碎片(0否、1是)，碎片合成数（30），当前数量，道具介绍，道具属性, 可合成道具id（道具为0，碎片为合成后道具id））
 prop_table_sql = 'create table prop(id integer PRIMARY KEY AUTOINCREMENT not NULL,' \
-                 ' name text, isDebris int, compound int, count int, recommend text, property text)'
+                 ' name text, isDebris int, compound int, count int, recommend text, property text, compoundID int)'
 
 
 def send_sql(table):
@@ -54,4 +55,3 @@ if __name__ == '__main__':
             error += 1
         a += 1
     print(sun, error)
-
