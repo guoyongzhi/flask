@@ -5,14 +5,18 @@ from datetime import timedelta
 import os
 import random
 import time
+from functools import lru_cache
+
 import itchat
 import logger
 import traceback
 
-from static.src.api.chengyujielong import chengyujielong, idiom_dic, users_list
+from static.src.api.chengyujielong import chengyujielong, idiom_dict, users_list
 from static.src.api.count.read_name_all_info import read_name_all_info
 from static.src.api.config.get_game_config import Config
 from axf.dbredis import db_redis
+from static.src.api.game_views import execute_sql_lite
+from static.src.api.search import main
 
 import requests
 
@@ -20,20 +24,26 @@ user_list = []
 user_idiom_list = []
 ana_list = []
 ret_dict = dict()
-At_who = ''
+At_who = '机器人_菲菲'
 
 
 @itchat.msg_register(itchat.content.TEXT)  # 私发消息
 def text_reply(msg):  # 处理私人消息
     # msg = "努力上班中，晚点回复！"
     global user_list, user_idiom_list, ana_list, ret_dict, At_who
-    print(msg)
+    # print(msg)
     talk = msg.text
-    print(msg['User']['NickName'], msg['User']['RemarkName'], talk)
-    name = msg['User']['RemarkName']
     fromUserName = msg['FromUserName']
-    if not name:  # 当没有备注时取微信名称
-        name = msg['User']['NickName']
+    try:
+        name = msg['User']['RemarkName']
+        if not name:
+            name = msg['User']['NickName']
+    except Exception:
+        name = msg['RecommendInfo']['UserName']
+        # print(name, fromUserName)
+        if not name:  # 当没有备注时取微信名称
+            name = msg['RecommendInfo']['NickName']
+    # print(name, talk)
     if name == At_who:
         if talk[:1] == '@' or talk[:1] == 'T':
             try:
@@ -68,18 +78,21 @@ def text_reply(msg):  # 处理私人消息
                 print(e)
                 return '发送失败'
     if talk == '开始聊天' or talk == '开启聊天':
-        talk_list = db_redis(db=3).get_owner(owner='talk')
-        print(talk_list)
+        # talk_list = db_redis(db=3).get_owner(owner=fromUserName)
+        # print(talk_list)
         if name in user_list:
             return '已经开始聊天咯~'
         user_list.append(str(name))
-        db_redis(db=3).set_value(name='talk', value=str(user_list))
+        db_redis(db=3).set_value(name=fromUserName, value=str(user_list))
         return '你好呀！我的小可爱'
     elif talk == '结束聊天' or talk == '关闭聊天' or talk == '不聊了':
         try:
-            talk_list = db_redis(db=3).get_owner(owner='talk')
-            print(talk_list)
+            talk_list = db_redis(db=3).get_owner(owner=fromUserName)
+            # print(talk_list)
             user_list.remove(str(name))
+            r = db_redis(db=3).delete(fromUserName)
+            if r:
+                print("删除成功")
             return '拜拜~'
         except Exception as e:
             print(e, '该值不存在')
@@ -156,7 +169,7 @@ def text_reply(msg):  # 处理私人消息
 
 
 game_dict = dict()
-pai = 0
+pai: int = 0
 this_num = 0
 qun_list = []
 idiom_list = []
@@ -164,27 +177,81 @@ red_packet_list = []
 Num_bomb_dict = dict()
 sign_in_list = []
 welcome = goodbye = ''
+esl: object = None
+
+
+# sqlite 重载
+@lru_cache(maxsize=10, typed=False)
+def refresh_sqlite():
+    global esl
+    a = 0
+    while a < 3:
+        try:
+            if not esl:
+                esl = execute_sql_lite()
+                if esl:
+                    break
+        except Exception:
+            a += 1
+    return esl
 
 
 @itchat.msg_register(itchat.content.TEXT, isGroupChat=True)  # 群消息（群游戏）
 def text_reply(msg):  # 处理群消息
-    global pai, this_num, game_dict, qun_list, idiom_list, red_packet_list, Num_bomb_dict, sign_in_list
+    global pai, this_num, game_dict, qun_list, idiom_list, red_packet_list, Num_bomb_dict, sign_in_list, esl
     try:
-        print(msg)
+        # print(msg)
+        nowTime = time.strftime("%Y-%m-%d %H:%M:%S")
         ActualUserName = msg['ActualUserName']  # 用户名称（腾讯用内置）
         talk = msg['Content']
         this = msg['User']['Self']['DisplayName']
-        thisUserName = msg['User']['Self']['UserName']
+        # thisUserName = msg['User']['Self']['UserName']
         qname = msg['User']['NickName']
         qun_user_name = msg['FromUserName']
-        who_talk = msg['ActualNickName']
         who = ''
         if not this:  # 当没有备注时取微信名称
             this = msg['User']['Self']['NickName']
+        # 转存群名称，群ID  sqlite
+        qun_keys_list = db_redis(15).get_db_keys()
+        if qname in qun_keys_list:
+            qun_dict = json.loads(db_redis(15).get_owner(qname))
+            qun_id = qun_dict['qun_id']
+            pai = qun_dict['pai']
+            this_num = qun_dict['this_num']
+        else:  # redis + sqlite 存储
+            esl.insert_sql(table_name='GroupChat', sql=[qname, qun_user_name])
+            time.sleep(0.05)
+            qun_list = esl.select_run(sql="select id from GroupChat where name='%s'" % qname)
+            qun_id = 0
+            if qun_list:
+                for r in qun_list:
+                    qun_id = r[0]
+            db_redis(15).set_value(name=qname, value=json.dumps({"qname": qname, "qun_id": qun_id, "pai": 0,
+                                                                 "this_num": 0}))
+            qun_dict = {"qname": qname, "qun_id": qun_id, "pai": 0, "this_num": 0}
+        who_talk = msg['ActualNickName']
         if not who_talk:
             return
-        log_File_Name = msg['User']['NickName']
-        aa = log_File_Name.split('/')
+        users_key_list = db_redis(14).get_db_keys()
+        if str(qun_id) + '_' + who_talk in users_key_list:
+            game_users_who_talk = db_redis(14).get_owner(str(qun_id) + '_' + who_talk)
+            who_talk_id = json.loads(game_users_who_talk)['user_id']
+        else:  # redis + sqlite 存储
+            # print(qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime)
+            esl.insert_sql(table_name='users', sql=[qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime])
+            time.sleep(0.05)
+            sql = 'select id from users where name=%s' % '"' + who_talk + '"'
+            who_talk_list = esl.select_run(sql=sql)
+            who_talk_id = 0
+            if who_talk_list:
+                for r in who_talk_list:
+                    who_talk_id = r[0]
+            db_redis(14).set_value(name=str(qun_id) + '_' + who_talk,
+                                   value=json.dumps({"user_id": who_talk_id, "sign_toList": 0,
+                                                     "point": 0, "gold": 0, "robNum": 18}))
+            game_users_who_talk = json.dumps({"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0,
+                                              "robNum": 18})
+        aa = qname.split('/')
         an = ''
         for i in aa:
             an += i
@@ -340,12 +407,11 @@ def text_reply(msg):  # 处理群消息
                 else:
                     talk = ''
                 talk = b_talk + talk
-                print(talk)
+                # print(talk)
             except Exception as ec:
                 print(ec, msg)
                 talk = ''
     if msg['isAt']:
-        nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         if who == this:
             if '点歌' == talk[:2] or '播放' == talk[:2]:
                 name = talk.split()
@@ -387,27 +453,37 @@ def text_reply(msg):  # 处理群消息
                     'i' + str(dayOfWeek)] + '. |\n语文课：【成语接龙】\n课间 ' '|\n玩小游戏：【打劫】 \n下午| \n音乐课：【点歌】' \
                                             '\n数学课： 【踩雷】'
             elif '抢劫' == talk or '打劫' == talk:  # 打劫机器人
+                values_dict_who_talk = json.loads(game_users_who_talk)
                 if this_num == 0:
                     return "@ " + who_talk + " 抢劫失败，机器人资产不足，可回复《兑换》消耗1积分。兑换机器人1000金币~"
+                to = random.randint(1, this_num)
+                winner = random.randint(0, 1)
+                if winner == 1:
+                    to *= 2
+                this_num -= to
                 if who_talk not in game_dict:
                     getpai = 0
                     getjifen = 0
-                    getjinbi = 0
-                    to = random.randint(0, this_num)
-                    getjinbi += to
-                    this_num -= to
-                    game_dict[who_talk] = getpai, getjifen, getjinbi, None
-                    return '😂[' + who_talk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                    getjinbi = to
+                    
                 else:
                     nowinfo = game_dict[who_talk]
-                    set_pai = nowinfo[0]
-                    jifen = nowinfo[1]
+                    getpai = nowinfo[0]
+                    getjifen = nowinfo[1]
                     getjinbi = nowinfo[2]
-                    to = random.randint(0, this_num)
                     getjinbi += to
-                    this_num -= to
-                    game_dict[who_talk] = set_pai, jifen, getjinbi, nowinfo[3]
-                    return '😂[' + who_talk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                values_dict_who_talk['gold'] = getjinbi
+                db_redis(14).set_value(name=json.dumps(str(qun_id) + '_' + who_talk),
+                                       value=json.dumps(values_dict_who_talk))
+                esl.update_delete_sql("update users set gold=%d where id=%d" % (getjinbi, who_talk_id))
+                qun_dict['this_num'] = this_num
+                db_redis(15).set_value(name=qname, value=json.dumps(qun_dict))
+                game_dict[who_talk] = getpai, getjifen, getjinbi, None, qun_id
+                if winner:
+                    return '😂恭喜[' + who_talk + '] 抢劫 [' + this + '] 成功，人品大爆发奖励双倍，抢走了对方' + str(
+                        to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + '次(打劫机器人不消耗次数)！'
+                return '😂[' + who_talk + '] 抢劫 [' + this + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫' + str(
+                    values_dict_who_talk['robNum']) + '次(打劫机器人不消耗次数)！'
             elif not talk:
                 # itchat.search_chatrooms(msg='消息', toUserName=ActualUserName)
                 # print(12)
@@ -492,7 +568,22 @@ def text_reply(msg):  # 处理群消息
         else:
             pass
     else:  # 同志们之间艾特
-        nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        # 先处理艾特谁入库
+        users_key_list = db_redis(14).r.keys()
+        if str(qun_id) + '_' + who in users_key_list:
+            game_users_who = db_redis(14).get_owner(str(qun_id) + '_' + who)
+            who_id = json.loads(game_users_who)['user_id']
+        else:  # redis + sqlite 存储
+            esl.insert_sql(table_name='users', sql=[qun_id, who, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime])
+            who_list = esl.select_run(sql="select id from users where name='%s'" % who)
+            who_id = 0
+            if who_list:
+                for r in who_list:
+                    who_id = r[0]
+            db_redis(14).set_value(name=str(qun_id) + '_' + who_talk,
+                                   value=json.dumps({"user_id": who_id, "sign_toList": 0, "point": 0, "gold": 0,
+                                                     "robNum": 18}))
+            game_users_who = json.dumps({"user_id": who_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18})
         if '抢劫' == talk or '打劫' == talk:  # 玩家间打劫
             try:
                 getpai = 0
@@ -511,21 +602,42 @@ def text_reply(msg):  # 处理群消息
                 setjinbi = whoset[2]
                 if setjinbi:
                     fzhuan = random.randint(0, 1)
+                    winner = random.randint(0, 1)
+                    values_dict_who_talk = json.loads(game_users_who_talk)
+                    if values_dict_who_talk['robNum'] == 0:
+                        return "很抱歉您今日打劫次数已用尽"
+                    values_dict = json.loads(game_users_who)
                     if fzhuan == 0:
                         if setjinbi > 0:
                             to = random.randint(1, int(setjinbi * 0.4))
+                            if winner == 1:
+                                to *= 2
                             setjinbi = setjinbi - to
                             getjinbi = getjinbi + to
-                            game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3]
-                            game_dict[who] = setpai, setjifen, setjinbi, whoset[3]
-                            return '😂[' + who_talk + '] 抢劫 [' + who + '] 成功，抢走了对方' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                            values_dict_who_talk['gold'] = getjinbi
+                            values_dict_who_talk['robNum'] -= 1
+                            ci = '次！'
                     else:
                         to = random.randint(1, int(getjinbi * 0.2))
+                        if winner == 1:
+                            to *= 2
                         setjinbi += to
                         getjinbi -= to
-                        game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3]
-                        game_dict[who] = setpai, setjifen, setjinbi, whoset[3]
-                        return '😂[' + who_talk + '] 抢劫 [' + who + '] 失败，反被对方抢走了' + str(to) + '金币！\n⚠您还可以抢劫n次！'
+                        values_dict_who_talk['gold'] = getjinbi
+                        ci = '次(抢劫失败不消耗次数)！'
+                    db_redis(14).set_value(name=json.dumps(str(qun_id) + '_' + who_talk),
+                                           value=json.dumps(values_dict_who_talk))
+                    esl.update_delete_sql("update users set gold=%d where id=%d" % (getjinbi, who_talk_id))
+                    game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3], whoget[4]
+                    values_dict['gold'] = setjinbi
+                    db_redis(14).set_value(name=json.dumps(str(qun_id) + '_' + who), value=json.dumps(values_dict))
+                    esl.update_delete_sql("update users set gold=%d where id=%d" % (setjinbi, who_id))
+                    game_dict[who] = setpai, setjifen, setjinbi, whoset[3], whoset[4]
+                    if winner == 1:
+                        return '😂恭喜[' + who_talk + '] 抢劫 [' + who + '] 成功，人品大爆发奖励双倍，抢走了对方' + \
+                               str(to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci
+                    return '😂[' + who_talk + '] 抢劫 [' + who + '] 成功，抢走了对方' + str(to) + \
+                           '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci
                 else:
                     return '打劫失败，对方无资产！'
             except Exception as e:
@@ -549,6 +661,8 @@ def text_reply(msg):  # 处理群消息
                     setjinbi = whoset[2]
                     d_time = whoset[3]
                 if getjinbi:
+                    values_dict_who_talk = json.loads(game_users_who_talk)
+                    values_dict = json.loads(game_users_who)
                     try:
                         to = int(talk[2:])
                     except Exception:
@@ -559,8 +673,16 @@ def text_reply(msg):  # 处理群消息
                         return "请输入正确的金币数量"
                     setjinbi += to
                     getjinbi -= to
-                    game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3]
-                    game_dict[who] = setpai, setjifen, setjinbi, d_time
+                    values_dict_who_talk['gold'] = getjinbi
+                    db_redis(14).set_value(name=json.dumps(str(qun_id) + '_' + who_talk),
+                                           value=json.dumps(values_dict_who_talk))
+                    esl.update_delete_sql("update users set gold=%d where id=%d" % (getjinbi, who_talk_id))
+                    game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3], whoget[4]
+                    values_dict['gold'] = setjinbi
+                    db_redis(14).set_value(name=json.dumps(str(qun_id) + '_' + who), value=json.dumps(values_dict))
+                    esl.update_delete_sql("update users set gold=%d where id=%d" % (setjinbi, who_id))
+                    game_dict[who_talk] = getpai, getjifen, getjinbi, whoget[3], qun_id
+                    game_dict[who] = setpai, setjifen, setjinbi, d_time, qun_id
                     return '😂[' + who_talk + '] 赠送 [' + who + '] ' + str(to) + '金币成功'
                 else:
                     return '赠送失败，当前您无资产！'
@@ -670,9 +792,21 @@ def text_reply(msg):  # 处理群消息
         if who_talk not in game_dict:
             pai += 1
             if pai <= 10:
+                # sign_in_list = db_redis(13).get_owner(owner=str(qun_id))
                 sign_in_list.append(who_talk)
+                db_redis(13).set_value(name=str(qun_id), value=str(sign_in_list))
             qiandaojifen = 10
             qiandaojinbi = 500
+            qun_dict['pai'] = pai
+            db_redis(15).set_value(name=qname, value=json.dumps(qun_dict))
+            values_dict = json.loads(game_users_who_talk)
+            values_dict['sign_toList'] = pai
+            values_dict['point'] = qiandaojifen
+            values_dict['gold'] = qiandaojinbi
+            values_dict['signTime'] = nowTime
+            db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(values_dict))
+            esl.update_delete_sql("update users set sign_toList=%d, point=%d, gold=%d, signTime='%s' where id=%d"
+                                  % (pai, qiandaojifen, qiandaojinbi, str(nowTime), who_talk_id))
             game_dict[who_talk] = pai, qiandaojifen, qiandaojinbi, nowTime
             now = time.strftime("%H:%M:%S")
             return "👻[" + who_talk + ']签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(qiandaojifen) + '积分 ' + str(
@@ -686,10 +820,12 @@ def text_reply(msg):  # 处理群消息
             if d_pai == 0:
                 pai += 1
                 if pai <= 10:
-                    sign_in_list.append(who_talk)
+                    # sign_in_list = db_redis(13).get_owner(owner=str(qun_id))
+                    sign_in_list.append(str(who_talk))
+                    db_redis(13).set_value(name=str(qun_id), value=str(sign_in_list))
                 jifen += 10
                 jinbi += 500
-                game_dict[who_talk] = pai, jifen, jinbi, nowTime
+                game_dict[who_talk] = pai, jifen, jinbi, nowTime, qun_id
                 if jinbi < 1000:
                     ty = '新手上路'
                 elif jinbi < 5000:
@@ -703,11 +839,24 @@ def text_reply(msg):  # 处理群消息
                 elif jinbi > 200000:
                     ty = '大富翁'
                 now = time.strftime("%H:%M:%S")
-                return "👻" + who_talk + '签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(10) + '积分 ' + str(
-                    500) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
+                qun_dict['pai'] = pai
+                db_redis(15).set_value(name=qname, value=json.dumps(qun_dict))
+                values_dict = json.loads(game_users_who_talk)
+                values_dict['sign_toList'] = pai
+                values_dict['point'] = jifen
+                values_dict['gold'] = jinbi
+                values_dict['signTime'] = nowTime
+                db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(values_dict))
+                esl.update_delete_sql(
+                    "update users set sign_toList=%d, point=%d, gold=%d, signTime='%s' where id=%d" % (
+                        pai, jifen, jinbi, str(nowTime), who_talk_id))
+                return "👻[" + who_talk + ']签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(10) + '积分 ' + str(
+                    500) + '金币\n👻现有资产：' + str(jifen) + '积分 ' + str(jinbi) + '金币\n👻头衔：' + ty + \
+                    '\n👻时间：' + str(now)
             else:
                 return '亲您已签到过了，请勿重复签到'
     elif '排行榜' == talk or '签到排行榜' == talk:
+        sign_in_list = db_redis(13).get_owner(owner=str(qun_id))
         if sign_in_list:
             info = '今日当前签到排行榜\n'
             sign_in_list_len = 1
@@ -720,13 +869,20 @@ def text_reply(msg):  # 处理群消息
         else:
             info = '当前签到排行榜\n无人签到'
         return info
-    elif '查询' == talk or '积分查询' == talk or '金币查询' == talk:
-        if who_talk not in game_dict:
-            return '您今天未签到哦~'
-        nowinfo = game_dict[who_talk]
-        t_pai = nowinfo[0]
-        jifen = nowinfo[1]
-        jinbi = nowinfo[2]
+    elif '查询' == talk or '积分查询' == talk or '金币查询' == talk:  # 已废弃game_redis_dict
+        game_redis_dict = game_users_who_talk
+        if not game_redis_dict:
+            # if who_talk not in game_dict:
+            #     return
+            # nowinfo = game_dict[who_talk]
+            # t_pai = nowinfo[0]
+            # jifen = nowinfo[1]
+            # jinbi = nowinfo[2]
+            return "对不起，您无资产"
+        values_dict = json.loads(game_redis_dict)
+        t_pai = values_dict['sign_toList']
+        jifen = values_dict['point']
+        jinbi = values_dict['gold']
         if jinbi < 1000:
             ty = '新手上路'
         elif jinbi < 5000:
@@ -747,9 +903,14 @@ def text_reply(msg):  # 处理群消息
             return "👻[" + who_talk + ']查询成功\n👻签到排名：第' + str(t_pai) + '名\n👻资产：' + str(jifen) + '积分 ' + str(
                 jinbi) + '金币\n👻头衔：' + ty + '\n👻时间：' + str(now)
     elif '兑换' == talk:  # 兑换机器人金币
-        if who_talk not in game_dict:
+        if not game_users_who_talk:
             return '很抱歉，您的账户无资产~'
         else:
+            # redis
+            result_dict = json.loads(game_users_who_talk)
+            if result_dict['point'] != 0:
+                result_dict['point'] -= 1
+            # 本地存储
             nowinfo = game_dict[who_talk]
             t_pai = nowinfo[0]
             jifen = nowinfo[1]
@@ -758,6 +919,9 @@ def text_reply(msg):  # 处理群消息
                 return '很抱歉，您的账户积分不足~'
             jifen -= 1
             this_num += 1000
+            db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(result_dict))
+            qun_dict['this_num'] = this_num
+            db_redis(15).set_value(name=qname, value=json.dumps(qun_dict))
             game_dict[who_talk] = t_pai, jifen, getjinbi, nowinfo[3]
             return "@ " + who_talk + "兑换成功，祝您游戏愉快~"
     elif '讲个笑话' == talk or '笑话' == talk or '讲笑话' == talk:
@@ -768,18 +932,7 @@ def text_reply(msg):  # 处理群消息
         return re
     elif '讲个故事' == talk or '故事' == talk or '讲故事' == talk:
         return '很抱歉~该功能尚未实现！ 回复“帮助”查看已完成功能~'
-    elif '开始聊天' == talk or '开启聊天' == talk or '机器人聊天' == talk:
-        if qname in qun_list:
-            return '已经开始聊天咯~'
-        qun_list.append(qname)
-        return welcome
-    elif '结束聊天' == talk or '关闭聊天' == talk or '不聊了' == talk:
-        try:
-            qun_list.remove(qname)
-            return goodbye
-        except Exception as e:
-            print(e, '该值不存在')
-    elif '菜单' in talk or '帮助' in talk or 'help' in talk:
+    elif '菜单' == talk or '帮助' == talk or 'help' == talk:
         return "自己看看吧，是不是多到眼花\n机器人聊天    成语接龙\n群签到    打劫游戏\n点歌    踩雷游戏\n笑话  " \
                "谁是魔王（开发中）其他功能正在努力开发中"
     elif '聊天菜单' == talk or '聊天帮助' == talk or '聊天help' == talk:
@@ -819,13 +972,14 @@ def text_reply(msg):  # 处理群消息
         Num = -1
         try:
             Num = int(talk)
-        except Exception as e:
-            print("非踩雷", e)
+        except Exception:
+            pass
         if Num != -1:
             try:
                 a1, c, d = Num_bomb_dict[qname]
                 cai_lei_info = game_dict[who_talk]
                 monkey_Num = cai_lei_info[2]
+                result_dict = json.loads(game_users_who_talk)
                 if a1 == -1:
                     a1 = random.randint(0, 100)
                     c = 0
@@ -836,19 +990,25 @@ def text_reply(msg):  # 处理群消息
                     a1 = -1
                     Num_bomb_dict[qname] = a1, c, d
                     monkey_Num -= 5
+                    result_dict['gold'] -= 5
                     game_dict[who_talk] = cai_lei_info[0], cai_lei_info[1], monkey_Num, cai_lei_info[3]
+                    db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(result_dict))
                     return '@' + who_talk + " 踩雷了 - 5金币，本轮已结束。继续请继续输入数字。"
                 elif Num < a1:
                     c = Num
                     Num_bomb_dict[qname] = a1, c, d
                     monkey_Num += 1
+                    result_dict['gold'] += 1
                     game_dict[who_talk] = cai_lei_info[0], cai_lei_info[1], monkey_Num, cai_lei_info[3]
+                    db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(result_dict))
                     return '@' + who_talk + " 恭喜您未中雷 + 1金币，请继续：" + str(c) + " 到" + str(d) + "的数字"
                 elif Num > a1:
                     d = Num
                     Num_bomb_dict[qname] = a1, c, d
                     monkey_Num += 1
+                    result_dict['gold'] += 1
                     game_dict[who_talk] = cai_lei_info[0], cai_lei_info[1], monkey_Num, cai_lei_info[3]
+                    db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(result_dict))
                     return '@' + who_talk + " 恭喜您未中雷 + 1金币，请继续：" + str(c) + " 到" + str(d) + "的数字"
                 else:
                     Num_bomb_dict[qname] = a1, c, d
@@ -864,6 +1024,8 @@ def text_reply(msg):  # 处理群消息
             re = re.replace('{br}', '\n')
         # if '菲菲' in re:
             # re = re.replace('菲菲', '小白')
+        if '未获取到相关信息' in re:
+            return
         print(qname, "--群聊：{}  ({})".format(re, datetime.now()))
         return re
     elif qname in ana_list:
@@ -1099,7 +1261,7 @@ def set_info():
         file.write('---\n')
         file.write('.'.join(sign_in_list))
         file.write('---\n')
-        file.write(json.dumps(idiom_dic))
+        file.write(json.dumps(idiom_dict))
         file.write('---\n')
         file.write('.'.join(users_list))
         file.write('---\n')
@@ -1109,7 +1271,7 @@ def set_info():
 
 def get_info():
     global qun_list, user_list, game_dict, user_idiom_list, red_packet_list, idiom_list, this_num, ana_list, \
-        sign_in_list, pai, idiom_dic, users_list
+        sign_in_list, pai, idiom_dict, users_list
     with open('config.txt', 'r', encoding='utf-8') as file:
         a_list = []
         aa = file.readlines()
@@ -1153,8 +1315,9 @@ def get_info():
                 sign_in_list.remove('')
             except Exception:
                 pass
-            pai = len(sign_in_list)
-            idiom_dic = json.loads(a_list[9])
+            keys_list = db_redis(0).r.keys()
+            pai = len(keys_list)
+            idiom_dict = json.loads(a_list[9])
             users_list = a_list[10].split('.')
             try:
                 users_list.remove('')
@@ -1171,12 +1334,34 @@ def get_info():
 def func():
     global pai, game_dict, sign_in_list
     new_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    print("0点定时存档", set_info())
     pai = 0
     sign_in_list.clear()
     if game_dict:
         for i in game_dict.keys:
             game_dict[i] = pai, game_dict[i][1], game_dict[i][2], game_dict[i][3]
+    print("开始删除redis签到记录")
+    # 清除用户签到排名
+    keys_list = db_redis(14).r.keys()
+    if keys_list:
+        for kl in keys_list:
+            res_qun_dict = db_redis(14).get_owner(owner=kl)
+            result_dict = json.loads(res_qun_dict)
+            result_dict['sign_toList'] = 0
+            db_redis(14).set_value(name=kl, value=json.dumps(result_dict))
+    # 清除群签到排名数据
+    keys_list = db_redis(15).r.keys()
+    if keys_list:
+        for kl in keys_list:
+            res_qun_dict = db_redis(15).get_owner(owner=kl)
+            result_dict = json.loads(res_qun_dict)
+            result_dict['pai'] = 0
+            db_redis(15).set_value(name=kl, value=json.dumps(result_dict))
+    keys_list = db_redis(13).r.keys()
+    # 清除签到排行榜库
+    if keys_list:
+        for kl in keys_list:
+            db_redis(13).delete(name=kl)
+    print("0点定时存档", set_info())
     print("执行时间", new_time)
     # 如果需要循环调用，就要添加以下方法
     # timing = threading.Timer(86400, func)
@@ -1194,9 +1379,14 @@ def run():
     print("先初始化再启动")
     config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"config")
     config_path = os.path.join(config_dir, 'game_config.ini')
-    print(config_path)
-    get_info()
+    # print(config_path)
+    print(get_info())
     set_common_return_info()
+    #  初始化table
+    refresh_sqlite()
+    table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
+    for t in table_list:
+        esl.new_table(t)
     print("初始化完成")
     return True
 
@@ -1213,7 +1403,7 @@ if __name__ == '__main__':
         # 初始化
         run()
         # 登录
-        itchat.auto_login()
+        itchat.auto_login(hotReload=True)
         now_time = datetime.now()
         # 获取明天年月日
         next_time = now_time + timedelta(days=+1)
@@ -1231,7 +1421,7 @@ if __name__ == '__main__':
         timer_start_time = (next_time - now_time).total_seconds()
         # print(timer_start_time)
         # 54186.75975
-
+        
         # 定时器,参数为(多少时间后执行，单位为秒，执行的方法)
         timer = threading.Timer(timer_start_time, func)
         timer.start()
@@ -1259,6 +1449,8 @@ if __name__ == '__main__':
         # print(u"男性好友：%.2f%%" % (float(male) / total * 100))
         # print(u"女性好友：%.2f%%" % (float(female) / total * 100))
         # print(u"其他：%.2f%%" % (float(other) / total * 100))
+        # for g in itchat.get_chatrooms(update=True)[0:]:
+        #     print(g)
         itchat.run()
     except Exception:
         with open('chat/error.log', 'a') as f:

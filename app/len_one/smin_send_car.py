@@ -113,8 +113,8 @@ if __name__ == '__main__':
     # result = pay_send_car('192.168.11.158', 5, date_time='2020-10-12')
     # print(result)
     threading_list = []
-    a1 = threading.Thread(target=run, args=(35, '192.168.11.158',))
-    a2 = threading.Thread(target=run, args=(35, '192.168.11.153',))
+    a1 = threading.Thread(target=run, args=(101, '192.168.11.158',))
+    a2 = threading.Thread(target=run, args=(101, '192.168.11.153',))
     a1.start()
     a2.start()
     threading_list.append(a1)

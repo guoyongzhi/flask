@@ -38,21 +38,20 @@ def get_execl():
         rn = rn.split(',')
     except Exception as e:
         print(e)
-        help = 'u:参数标题\n s:首行数据\n p:数据总数\n n:递归参数\n'
-        return "参数错误，请检查参数：\n" + help
+        return "参数错误，请检查参数：\n" + 'u:参数标题\n s:首行数据\n p:数据总数\n n:递归参数\n'
     fot_i = []
     date = dict()
     date[str(1)] = s
-    for i in rn:
-        weizhi = 0
+    for n in rn:
+        way = 0
         for nn in s:
-            if nn == i:
-                fot_i.append(weizhi)
-            weizhi += 1
-    for i in range(1, int(rp) + 1):
+            if nn == n:
+                fot_i.append(way)
+            way += 1
+    for p in range(1, int(rp) + 1):
         for n in fot_i:
             rns[n] = str(int(rns[n]) + 1)
-        date[str(i + 1)] = rns.copy()
+        date[str(p + 1)] = rns.copy()
     now = int(time.time())
     filename = "I:\\文档\\t\\{}.xlsx".format(str(now))
     res = openpyxl_excel.write_new_file_excel(filename, datadict=date)
@@ -70,15 +69,22 @@ def test_test():
     :rtype:
     """
     try:
+        User_headers = {'User-Agent': 'Mozilla/5.0'}
         date_dict = request.get_json()
         if date_dict:
             Data = date_dict['date']
-            headers = date_dict['headers']
+            try:
+                headers = dict(User_headers, **json.loads(date_dict['headers']))
+            except Exception:
+                headers = dict(User_headers, **date_dict['headers'])
         else:
             date_dict = CommonMethod(request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
                                                                 'methodsType')
             Data = json.loads(date_dict['date'])
-            headers = json.loads(date_dict['headers'])
+            try:
+                headers = dict(User_headers, **json.loads(date_dict['headers']))
+            except Exception:
+                headers = dict(User_headers, **date_dict['headers'])
         if not date_dict:
             return "请求无参数或参数不正确"  # print(date_dict, type(date_dict))
     except Exception as e:
@@ -238,10 +244,10 @@ def send_send_car():
     if not CommonMethod.common_check_required(date_dict, 'host', 'ip', 'car'):
         return jsonify("参数错误或缺失")
     sun = fail = error = 0
-    car_num = date_dict['car']
-    re = car_num.split(',')
+    car_nums = date_dict['car']
+    re = car_nums.split(',')
     if len(re) == 1:
-        res = car_num.split('，')
+        res = car_nums.split('，')
         if len(res) > 1:
             re = res
     for c in re:
@@ -329,8 +335,8 @@ def parse_data(message):
             data = message[6:]
         en_bytes = b""
         cn_bytes = []
-        for i, d in enumerate(data):
-            nv = chr(d ^ masks[i % 4])
+        for ai, d in enumerate(data):
+            nv = chr(d ^ masks[ai % 4])
             nv_bytes = nv.encode()
             nv_len = len(nv_bytes)
             if nv_len == 1:
@@ -340,11 +346,11 @@ def parse_data(message):
                 cn_bytes.append(ord(nv_bytes.decode()))
         if len(cn_bytes) > 2:
             cn_str = ""
-            clen = len(cn_bytes)
-            count = int(clen / 3)
+            cl_b = len(cn_bytes)
+            count = int(cl_b / 3)
             for x in range(count):
-                i = x * 3
-                b = bytes([cn_bytes[i], cn_bytes[i + 1], cn_bytes[i + 2]])
+                ii = x * 3
+                b = bytes([cn_bytes[ii], cn_bytes[ii + 1], cn_bytes[ii + 2]])
                 # try:
                 cn_str += b.decode()  # except Exception as e:  #     print(e)
             new = en_bytes.replace(b'%s%s%s', b'%s')
@@ -369,7 +375,7 @@ def sendMessage(message):
     """
     global connection_list
     global lock
-    error = ""
+    result = "OK"
     lock.acquire()
     try:
         send_msg = b""  # 使用bytes格式,避免后面拼接的时候出现异常
@@ -405,15 +411,14 @@ def sendMessage(message):
             except Exception as e:
                 print("严重错误", e)
         if del_list:
-            for i in del_list:
-                print("找不到连接：正在删除", i)
-                del connection_list[i]
-        error = "OK"
+            for dl in del_list:
+                print("找不到连接：正在删除", dl)
+                del connection_list[dl]
     finally:
         # print("释放锁")
         lock.release()
-        error = "error"
-    return error
+        result = "error"
+    return result
 
 
 def send_receive_message(message):  # 直接回复
@@ -435,9 +440,9 @@ def send_receive_message(message):  # 直接回复
             except Exception as e:
                 print("严重错误", e)
         if del_list:
-            for i in del_list:
-                print("找不到连接：正在删除", i)
-                del connection_list[i]
+            for dl in del_list:
+                print("找不到连接：正在删除", dl)
+                del connection_list[dl]
     finally:
         # print("释放锁")
         lock.release()

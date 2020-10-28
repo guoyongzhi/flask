@@ -8,26 +8,32 @@ class execute_sql_lite(object):
     def __init__(self):
         self.db = 'games.db'
     
+    # def __new__(cls, *args, **kwargs):
+    #
+    #     return
+    
     def select_run(self, sql):
-        coon = sqlite3.connect(self.db)
-        c = coon.cursor()
-        res = c.execute(sql)
-        coon.commit()
-        coon.close()
-        if res:
-            return 'OK'
-        else:
-            return "请检查SQL"
+        try:
+            coon = sqlite3.connect(self.db)
+            c = coon.cursor()
+            c.execute(sql)
+            res_list = []
+            for r in c.fetchall():
+                res_list.append(r)
+            coon.close()
+            return res_list
+        except Exception:
+            return None
     
     def run_commit(self, sql):
         coon = sqlite3.connect(self.db)
         c = coon.cursor()
         try:
             c.execute(sql)
+            coon.commit()
             res = 'ok'
         except Exception as e:
             res = str(e)
-        coon.commit()
         coon.close()
         return res
     
@@ -42,6 +48,10 @@ class execute_sql_lite(object):
         return self.run_commit(sql)
     
     def insert_sql(self, table_name, sql):
+        if table_name == 'users':
+            if not sql[1]:
+                if not sql[2]:
+                    return
         insert_table = send_sql(table_name)
         dd = ''
         for i in sql:
@@ -56,6 +66,7 @@ class execute_sql_lite(object):
                 else:
                     dd = str(i)
         sql = 'insert into %s values (%s)' % (insert_table, dd)
+        # print(sql)
         return self.run_commit(sql)
     
     def update_delete_sql(self, sql):
@@ -98,9 +109,13 @@ def Boss_prop_drop(Boss_name, number, total_prop):
 if __name__ == '__main__':
     #  初始化
     # table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
-    # esl = execute_sql_lite()
+    esl = execute_sql_lite()
     # for t in table_list:
-    #     esl.new_table(t)
-    Boss_challenge(10000, 1, 278)
+    #     esl.new_table(tables_name=t)
+    # res = esl.select_run("select id from GroupChat GC where name='诗和远方｜户外'")
+    esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
+    who_talk_list = esl.select_run(sql="select id from users where name='%s'" % 23)
+    # print(res)
+    # Boss_challenge(10000, 1, 278)
     # execute_sql_lite().insert_sql('GroupChat', ['sddf', 'fffffff'])
     # execute_sql_lite()

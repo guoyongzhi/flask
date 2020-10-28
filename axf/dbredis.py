@@ -20,12 +20,17 @@ print(r.get('name').decode('utf8'))
 
 class db_redis(object):
     def __init__(self, db=0):
+        """
+        db15 为群 db14 为用户(带群ID) db13为签到排行榜(带群ID)
+        :param db:
+        :type db:
+        """
         if db != 0:
             pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz',
-                                        decode_responses=True, max_connections=2, db=db)
+                                        decode_responses=True, max_connections=1, db=db)
         else:
             pool = redis.ConnectionPool(host='129.28.151.153', password='tengo153yz',
-                                        decode_responses=True, max_connections=2)
+                                        decode_responses=True, max_connections=1)
         self.r = redis.Redis(connection_pool=pool, decode_responses=True)
     
     def set_value(self, name, value, ex=0, px=0):
@@ -103,7 +108,7 @@ class db_redis(object):
         :rtype: str
         """
         keys = self.r.keys()
-        if bytes(key, encoding='utf-8') in keys:
+        if key in keys:
             res = self.r.getset(key, value)
         else:
             return 'Error'
@@ -114,19 +119,24 @@ class db_redis(object):
     
     def delete(self, name):
         keys = self.r.keys()
-        if bytes(name, encoding='utf-8') in keys:
+        if name in keys:
             self.r.delete(name)
         else:
             return False
         return True
+    
+    def get_db_keys(self):
+        return self.r.keys()
 
 
 if __name__ == '__main__':
-    user_info = dict(id=1, name='小明', age=18)
+    # user_info = dict(id=1, name='小明', age=18)
     # user_info = dict(pai=1, jifen=20, jinbi=201)
     # user_info = [12, 13, 14]
     # print(db_redis().get_set_value('foo', json.dumps(user_info)))
-    print(json.loads(db_redis().get_owner('foo')))
+    # print(json.loads(db_redis().get_owner('1')))
+    keys_list = db_redis(14).r.keys()
+    print(keys_list, type(keys_list))
     # print(db_redis().batch_get_value(user_info))
     # a = 85197
     # for i in range(10):
