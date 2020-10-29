@@ -4,6 +4,42 @@ import numpy as np
 from static.src.api.config.get_game_config import *
 
 
+def open_db():
+    db = 'games.db'
+    coon = sqlite3.connect(db)
+    c = coon.cursor()
+    return coon, c
+
+
+def close_db(coon, c):
+    coon.commit()
+    coon.close()
+
+
+class Users:
+    __table_name__ = 'users'
+    
+    def __init__(self, parameter):
+        self.GroupChat_ID = parameter.get('GroupChat_ID', 0)
+        self.name = parameter.get('name', '')
+        self.nickname = parameter.get('nickname', '')
+        self.username = parameter.get('username', '')
+        self.sign_toList = parameter.get('sign_toList', 0)
+        self.point = parameter.get('point', 0)
+        self.gold = parameter.get('gold', 0)
+        self.signTime = parameter.get('signTime', '')
+        self.fightingCombat = parameter.get('fightingCombat', 0)
+        self.hiddenScore = parameter.get('hiddenScore', 0)
+        self.addTime = parameter.get('sign_toList', '')
+    
+    @classmethod
+    def add(cls, users):
+        coon, c = open_db()
+        sql_inset = """"""
+        coon.execute(sql_inset)
+        close_db(coon, c)
+
+
 class execute_sql_lite(object):
     def __init__(self):
         self.db = 'games.db'
@@ -22,7 +58,8 @@ class execute_sql_lite(object):
                 res_list.append(r)
             coon.close()
             return res_list
-        except Exception:
+        except Exception as e:
+            print(e)
             return None
     
     def run_commit(self, sql):
@@ -57,16 +94,16 @@ class execute_sql_lite(object):
         for i in sql:
             if isinstance(i, (str, float)):
                 if dd:
-                    dd += ',"' + i + '"'
+                    dd += ",'" + i + "'"
                 else:
-                    dd = '"' + i + '"'
+                    dd = "'" + i + "'"
             elif isinstance(i, int):
                 if dd:
                     dd += ',' + str(i)
                 else:
                     dd = str(i)
         sql = 'insert into %s values (%s)' % (insert_table, dd)
-        # print(sql)
+        print(sql)
         return self.run_commit(sql)
     
     def update_delete_sql(self, sql):
@@ -113,8 +150,14 @@ if __name__ == '__main__':
     # for t in table_list:
     #     esl.new_table(tables_name=t)
     # res = esl.select_run("select id from GroupChat GC where name='诗和远方｜户外'")
-    esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
-    who_talk_list = esl.select_run(sql="select id from users where name='%s'" % 23)
+    # esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
+    who_talk_list = esl.select_run(sql="select max(id) from users where name='%s'" % "Mr. Black")
+    print(who_talk_list)
+    if who_talk_list:
+        print(who_talk_list[0][0])
+        print(11)
+    else:
+        print(22)
     # print(res)
     # Boss_challenge(10000, 1, 278)
     # execute_sql_lite().insert_sql('GroupChat', ['sddf', 'fffffff'])

@@ -44,8 +44,9 @@ def main(count=10):
 
 if __name__ == '__main__':
     # print(main())
-    to = 100
-    to *= 2
-    print(to)
+    a = dict(name="张三", id=1)
+    print(a)
+    a['id'] += 1
+    print(a)
 
 
