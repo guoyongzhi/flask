@@ -42,7 +42,7 @@ class Users:
 
 class execute_sql_lite(object):
     def __init__(self):
-        self.db = 'games.db'
+        self.db = r'I:\work\flask\static\src\api\games.db'
     
     # def __new__(cls, *args, **kwargs):
     #
