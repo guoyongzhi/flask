@@ -149,22 +149,23 @@ if __name__ == '__main__':
         game_users_who_talk = db_redis(14).get_owner(str(qun_id) + '_' + who_talk)
         who_talk_id = json.loads(game_users_who_talk)['user_id']
     else:  # redis + sqlite 存储
-        esl.update_delete_sql(sql='delete from users where id=2')
-        sql = "select max(id) from users where name='{0}' and GroupChat_ID={1}".format(str(who_talk), qun_id)
-        who_talk_list = esl.select_run(sql=sql)
+        esl.update_delete_sql(sql='delete from users where id=1')
+        sql = 'select max(id) from users where name=? and GroupChat_ID=?'
+        who_talk_list = esl.select_run(sql, who_talk, qun_id)
         if not who_talk_list[0][0]:
             esl.insert_sql(table_name='users', sql=[qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime])
             time.sleep(0.05)
-            sql = "select max(id) from users where name='%s' and GroupChat_ID=%d" % (who_talk, qun_id)
-            who_talk_list = esl.select_run(sql=sql)
-            if who_talk_list[0][0]:
-                who_talk_id = who_talk_list[0][0]
-                if who_talk_id == 0:
-                    print("当前用户id为0")
-                db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
-                    {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18}))
-                game_users_who_talk = json.dumps(
-                    {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18})
+            sql = "select max(id) from users where name=? and GroupChat_ID=?"
+            who_talk_list = esl.select_run(sql, who_talk, qun_id)
+            if who_talk_list:
+                if who_talk_list[0][0]:
+                    who_talk_id = who_talk_list[0][0]
+                    if who_talk_id == 0:
+                        print("当前用户id为0")
+                    # db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
+                    #     {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18}))
+                    game_users_who_talk = json.dumps(
+                        {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18})
             else:
                 print(111)
         else:

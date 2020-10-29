@@ -48,11 +48,14 @@ class execute_sql_lite(object):
     #
     #     return
     
-    def select_run(self, sql):
+    def select_run(self, sql, *args, **kwargs):
         try:
             coon = sqlite3.connect(self.db)
             c = coon.cursor()
-            c.execute(sql)
+            if args:
+                c.execute(sql, tuple(args))
+            else:
+                c.execute(sql)
             res_list = []
             for r in c.fetchall():
                 res_list.append(r)
@@ -62,11 +65,16 @@ class execute_sql_lite(object):
             print(e)
             return None
     
-    def run_commit(self, sql):
+    def run_commit(self, sql, *args):
         coon = sqlite3.connect(self.db)
         c = coon.cursor()
         try:
-            c.execute(sql)
+            if args:
+                print(sql, tuple(args[0]))
+                c.execute(sql, tuple(args[0]))
+            else:
+                print(sql)
+                c.execute(sql)
             coon.commit()
             res = 'ok'
         except Exception as e:
@@ -84,33 +92,26 @@ class execute_sql_lite(object):
             return
         return self.run_commit(sql)
     
-    def insert_sql(self, table_name, sql):
+    def insert_sql(self, table_name, sql, *args):
         if table_name == 'users':
             if not sql[1]:
                 if not sql[2]:
                     return
         insert_table = send_sql(table_name)
-        dd = ''
-        for i in sql:
-            if isinstance(i, (str, float)):
-                if dd:
-                    dd += ",'" + i + "'"
+        sql_l = 'insert into {}'.format(insert_table) + ' values('
+        if sql:
+            for i in range(len(sql)):
+                if i == len(sql) - 1:
+                    sql_l += '?)'
                 else:
-                    dd = "'" + i + "'"
-            elif isinstance(i, int):
-                if dd:
-                    dd += ',' + str(i)
-                else:
-                    dd = str(i)
-        sql = 'insert into %s values (%s)' % (insert_table, dd)
-        print(sql)
-        return self.run_commit(sql)
+                    sql_l += '?,'
+        return self.run_commit(sql_l, sql)
     
-    def update_delete_sql(self, sql):
-        return self.run_commit(sql)
+    def update_delete_sql(self, sql, *args):
+        return self.run_commit(sql, args)
     
-    def select_sql(self, sql):
-        return self.select_run(sql)
+    def select_sql(self, sql, *args):
+        return self.select_run(sql, args)
 
 
 def Boss_challenge(Boss_blood, number, total_force):
@@ -150,14 +151,15 @@ if __name__ == '__main__':
     # for t in table_list:
     #     esl.new_table(tables_name=t)
     # res = esl.select_run("select id from GroupChat GC where name='诗和远方｜户外'")
-    # esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
-    who_talk_list = esl.select_run(sql="select max(id) from users where name='%s'" % "Mr. Black")
-    print(who_talk_list)
-    if who_talk_list:
-        print(who_talk_list[0][0])
-        print(11)
-    else:
-        print(22)
+    res = esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
+    print(res)
+    # who_talk_list = esl.select_run('''select max(id) from users where name=?''', "Mr. Black")
+    # print(who_talk_list)
+    # if who_talk_list:
+    #     print(who_talk_list[0][0])
+    #     print(11)
+    # else:
+    #     print(22)
     # print(res)
     # Boss_challenge(10000, 1, 278)
     # execute_sql_lite().insert_sql('GroupChat', ['sddf', 'fffffff'])
