@@ -1,8 +1,6 @@
-# import json
+a = ' '
 
-from static.src.api.itchat_reboot import *
-
-if __name__ == '__main__':
-    # print(set_info())
-    print(get_info())
-
+if a:
+    print(1111)
+else:
+    print(222)

@@ -1,11 +1,12 @@
 import sqlite3
+import setting
 from static.src.api.gime_table import *
 import numpy as np
 from static.src.api.config.get_game_config import *
+from django.db import connection
 
 
-def open_db():
-    db = 'games.db'
+def open_db(db):
     coon = sqlite3.connect(db)
     c = coon.cursor()
     return coon, c
@@ -42,18 +43,27 @@ class Users:
 
 class execute_sql_lite(object):
     def __init__(self):
-        self.db = r'I:\work\flask\static\src\api\games.db'
+        database = 'games.db'
+        if os.path.exists(database):
+            self.db = database
+        else:
+            database_dir = os.path.join(setting.APP_ROOT + r'static\src\api')
+            self.db = os.path.join(database_dir + database_dir)
+        if not os.path.exists(self.db):
+            print("sqlite数据文件未找到")
     
     # def __new__(cls, *args, **kwargs):
     #
     #     return
     
     def select_run(self, sql, *args, **kwargs):
+        # if not os.access(self.db, os.R_OK):
+        #     return None
+        coon = sqlite3.connect(self.db)
+        c = coon.cursor()
         try:
-            coon = sqlite3.connect(self.db)
-            c = coon.cursor()
             if args:
-                c.execute(sql, tuple(args))
+                c.execute(sql, args)
             else:
                 c.execute(sql)
             res_list = []
@@ -62,7 +72,8 @@ class execute_sql_lite(object):
             coon.close()
             return res_list
         except Exception as e:
-            print(e)
+            coon.close()
+            print(sql, args, "sql执行异常", e)
             return None
     
     def run_commit(self, sql, *args):
@@ -70,17 +81,20 @@ class execute_sql_lite(object):
         c = coon.cursor()
         try:
             if args:
-                print(sql, tuple(args[0]))
                 c.execute(sql, tuple(args[0]))
             else:
-                print(sql)
                 c.execute(sql)
             coon.commit()
-            res = 'ok'
+            result = 'ok'
         except Exception as e:
-            res = str(e)
+            if args:
+                print(sql, tuple(args[0]))
+            else:
+                print(sql)
+            print("sql执行异常", e)
+            result = str(e)
         coon.close()
-        return res
+        return result
     
     def new_table(self, tables_name):
         dd = tables_name + '_table_sql'
@@ -105,7 +119,9 @@ class execute_sql_lite(object):
                     sql_l += '?)'
                 else:
                     sql_l += '?,'
-        return self.run_commit(sql_l, sql)
+            return self.run_commit(sql_l, sql)
+        else:
+            return None
     
     def update_delete_sql(self, sql, *args):
         return self.run_commit(sql, args)

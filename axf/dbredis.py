@@ -135,52 +135,20 @@ if __name__ == '__main__':
     # user_info = [12, 13, 14]
     # print(db_redis().get_set_value('foo', json.dumps(user_info)))
     # print(json.loads(db_redis().get_owner('1')))
-    from static.src.api.game_views import execute_sql_lite
-    esl = execute_sql_lite()
+    # from static.src.api.game_views import execute_sql_lite
+    # esl = execute_sql_lite()
     # table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
     # for t in table_list:
     #     esl.new_table(tables_name=t)
-    qun_id = 16
-    who_talk = 'CC'
-    nowTime = time.strftime("%Y-%m-%d %H:%M:%S")
-    ActualUserName = ''
-    users_key_list = db_redis(14).get_db_keys()
-    if str(qun_id) + '_' + who_talk in users_key_list:
-        game_users_who_talk = db_redis(14).get_owner(str(qun_id) + '_' + who_talk)
-        who_talk_id = json.loads(game_users_who_talk)['user_id']
-    else:  # redis + sqlite 存储
-        esl.update_delete_sql(sql='delete from users where id=1')
-        sql = 'select max(id) from users where name=? and GroupChat_ID=?'
-        who_talk_list = esl.select_run(sql, who_talk, qun_id)
-        if not who_talk_list[0][0]:
-            esl.insert_sql(table_name='users', sql=[qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime])
-            time.sleep(0.05)
-            sql = "select max(id) from users where name=? and GroupChat_ID=?"
-            who_talk_list = esl.select_run(sql, who_talk, qun_id)
-            if who_talk_list:
-                if who_talk_list[0][0]:
-                    who_talk_id = who_talk_list[0][0]
-                    if who_talk_id == 0:
-                        print("当前用户id为0")
-                    # db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
-                    #     {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18}))
-                    game_users_who_talk = json.dumps(
-                        {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18})
-            else:
-                print(111)
-        else:
-            who_talk_id = who_talk_list[0][0]
-            if who_talk_id == 0:
-                print("当前用户id为0")
-            if db_redis(14).r.exists(str(qun_id) + '_' + who_talk):
-                print("已找到用户")
-                game_users_who_talk = db_redis(14).get_owner(str(qun_id) + '_' + who_talk)
-            else:
-                db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
-                    {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18}))
-                game_users_who_talk = json.dumps(
-                    {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": 18})
-    print(who_talk_id)
+    users_keys_list = db_redis(14).r.keys()
+    for u in users_keys_list:
+        res = db_redis(14).get_owner(u)
+        try:
+            result = json.loads(res)
+            if not result['user_id'] or isinstance(result['robNum'], str):
+                print(u, res)
+        except Exception as e:
+            print(e, res, u)
     # print(db_redis().batch_get_value(user_info))
     # a = 85197
     # for i in range(10):
