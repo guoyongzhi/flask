@@ -99,28 +99,19 @@ if __name__ == '__main__':
         file.write('---\n')
         file.close()
     """
-    """
-    import json
-    from axf.dbredis import db_redis
     # qun_id = 19
+    # from axf.dbredis import db_redis
     # result = db_redis(13).get_owner(owner=str(qun_id))
-    # print(result)
     # if result:
-    #     sign_list = result[1:-1].replace("'", '').split(',')
+    #     sign_list = result[1:-1].replace("'", '').split(', ')
     #     sign_in_list = sign_list
-    # if sign_in_list:
-    #     info = '今日当前签到排行榜\n'
-    #     sign_in_list_len = 1
-    #     for i in sign_in_list:
-    #         if len(sign_in_list) == sign_in_list_len:
-    #             info += '第' + str(sign_in_list_len) + '名：' + i
-    #         else:
-    #             info += '第' + str(sign_in_list_len) + '名：' + i + '\n'
-    #         sign_in_list_len += 1
-    # else:
-    #     info = '当前签到排行榜\n无人签到'
-    #
-    # print(info)
+    # print(str(sign_in_list))
+    # sign_list = result[1:-1].replace("'", '').split(',')
+    # sign_in_list = sign_list
+    # print(str(sign_in_list))
+    
+    """
+    
     qun_id = 1
     sign_in_list = []
     a = ['珠峰', '🍦🍦🍦', 'Jung(小华)', '"Jadore"', 'Song❤🚴🏸🚶', 'A小燕', '槑俐👣  \\\\\\\\U0001f929', '过客', 'LIU ', '成成']

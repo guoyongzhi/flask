@@ -4,7 +4,7 @@ GroupChat_table_sql = 'create table GroupChat(id integer PRIMARY KEY AUTOINCREME
 users_table_sql = 'create table users(id integer PRIMARY KEY AUTOINCREMENT not NULL,' \
                   'GroupChat_ID int, name text, nickname text, username text,' \
                   ' sign_toList int, point int, gold int, signTime text, ' \
-                  'fightingCombat int, hiddenScore int, addTime text)'
+                  'fightingCombat int, hiddenScore int, addTime text, RobCount text)'
 # 背包表（id，用户id，是否装配（0未装配、1装配），道具id，道具数量）
 Backpack_table_sql = 'create table Backpack(id integer PRIMARY KEY AUTOINCREMENT not NULL, user_ID int, isDress int,' \
                      'prop_ID int, propCount int)'

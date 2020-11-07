@@ -149,6 +149,15 @@ if __name__ == '__main__':
                 print(u, res)
         except Exception as e:
             print(e, res, u)
+    # keys_list = db_redis(14).r.keys()
+    # if keys_list:
+    #     for kl in keys_list:
+    #         res_qun_dict = db_redis(14).get_owner(owner=kl)
+    #         result_dict = json.loads(res_qun_dict)
+    #         if result_dict['robNum'] == 18:
+    #             continue
+    #         result_dict['robNum'] = 18
+    #         db_redis(14).set_value(name=kl, value=json.dumps(result_dict))
     # print(db_redis().batch_get_value(user_info))
     # a = 85197
     # for i in range(10):

@@ -127,6 +127,9 @@ def text_reply(msg):  # 处理私人消息
     elif '读档' == talk:
         res = get_info()
         return res
+    elif '清除签到记录' in talk:
+        func(keep_on=False)
+        return "ok"
     elif '设置转发' == talk[:4]:
         At_who = talk[4:]
     elif name in user_idiom_list:
@@ -260,7 +263,8 @@ def text_reply(msg):  # 处理群消息
                 who_talk_list = esl.select_run(sql, who_talk, qun_id)
                 if not who_talk_list[0][0]:
                     result = esl.insert_sql(table_name='users',
-                                            sql=[qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime])
+                                            sql=[qun_id, who_talk, '', ActualUserName, 0, 0, 0, 0, 0, 0, nowTime,
+                                                 '0-0-0'])
                     time.sleep(0.05)
                     if result == 'ok':
                         sql = "select max(id) from users where name=? and GroupChat_ID=?"
@@ -273,9 +277,11 @@ def text_reply(msg):  # 处理群消息
                             if not who_talk_id:
                                 return
                             db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
-                                {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum}))
+                                {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum,
+                                 "RobCount": "0-0-0"}))
                             game_users_who_talk = json.dumps(
-                                {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum})
+                                {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum,
+                                 "RobCount": "0-0-0"})
                         else:
                             return
                     else:
@@ -294,9 +300,11 @@ def text_reply(msg):  # 处理群消息
                         game_users_who_talk = db_redis(14).get_owner(str(qun_id) + '_' + who_talk)
                     else:
                         db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(
-                            {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum}))
+                            {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum,
+                             "RobCount": "0-0-0"}))
                         game_users_who_talk = json.dumps(
-                            {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum})
+                            {"user_id": who_talk_id, "sign_toList": 0, "point": 0, "gold": 0, "robNum": robNum,
+                             "RobCount": "0-0-0"})
             else:
                 game_users_who_talk = ''
         # print(who_talk_id)
@@ -327,7 +335,8 @@ def text_reply(msg):  # 处理群消息
                 who = new[0]
                 who = who[1:]
                 if who == '所有人':
-                    return '@' + who_talk + ' 收到~'
+                    # return '@' + who_talk + ' 收到~'
+                    return
             except Exception as e:
                 print('报错了', e)
                 return
@@ -350,39 +359,47 @@ def text_reply(msg):  # 处理群消息
                             ss += 1
                             if ss >= len(new):
                                 break
-                            joint_name = who + ' ' + new[ss]
+                            joint_name = who + ' '
                             a = 1
                             ao = 0
+                            d = 0
                             while ao <= 10:
                                 ll = len(joint_name) + 1
                                 if talk[:ll] == '@' + joint_name:
                                     who = joint_name
                                     break
                                 else:
-                                    nn = ' '
-                                    for i in range(0, a):
-                                        nn += ' '
-                                    joint_name = who + nn + new[ss]
-                                    a += 1
-                                    ao += 1
+                                    if d == 0:
+                                        joint_name = who + new[ss - 1]
+                                        d += 1
+                                        ss -= 1
+                                    else:
+                                        nn = ' '
+                                        for i in range(0, a):
+                                            nn += ' '
+                                        joint_name = who + nn + new[ss]
+                                        a += 1
+                                        ao += 1
                 else:
                     who = ''
-                    print('找不到用户', msg)
+                    print('找不到用户', 111)
             except Exception as eb:
                 who = ''
-                print('处理用户抱错了', eb, msg)
+                print('处理用户抱错了', eb, 213)
             try:
-                # ss = 0
-                if ss + 1 < len(new):
-                    if ss + 1 != len(new):
+                # print(ss, new)
+                if ss < len(new):
+                    if ss != len(new):
+                        if ss == 0:
+                            ss += 1
                         talk = ''
-                        for i in range(ss + 1, len(new)):
+                        for i in range(ss, len(new)):
                             if talk == '':
                                 talk = talk + new[i]
                             else:
                                 talk = talk + ' ' + new[i]
                     else:
-                        talk = new[ss + 1]
+                        talk = new[ss]
                 else:
                     talk = ''
             except Exception as ec:
@@ -401,7 +418,8 @@ def text_reply(msg):  # 处理群消息
                     now_talk = who.split()
                     who = now_talk[0]
                 if who == '所有人':
-                    return '@' + who_talk + ' 收到~'
+                    # '@' + who_talk + ' 收到~'
+                    return
             except Exception as e:
                 print('报错了', e)
                 return
@@ -424,21 +442,27 @@ def text_reply(msg):  # 处理群消息
                             ss += 1
                             if ss >= len(now_talk):
                                 break
-                            joint_name = who + ' ' + now_talk[ss]
+                            joint_name = who + ' '
                             a = 1
                             ao = 0
+                            d = 0
                             while ao <= 10:
                                 ll = len(joint_name) + len(b_talk) + 1
                                 if talk[:ll] == b_talk + '@' + joint_name:
                                     who = joint_name
                                     break
                                 else:
-                                    nn = ' '
-                                    for i in range(0, a):
-                                        nn += ' '
-                                    joint_name = who + nn + now_talk[ss]
-                                    a += 1
-                                    ao += 1
+                                    if d == 0:
+                                        joint_name = who + now_talk[ss - 1]
+                                        d += 1
+                                        ss -= 1
+                                    else:
+                                        nn = ' '
+                                        for i in range(0, a):
+                                            nn += ' '
+                                        joint_name = who + nn + now_talk[ss]
+                                        a += 1
+                                        ao += 1
                 else:
                     who = ''
                     print('找不到用户', msg)
@@ -446,16 +470,18 @@ def text_reply(msg):  # 处理群消息
                 who = ''
                 print('处理用户抱错了', eb, msg)
             try:
-                if ss + 1 < len(now_talk):
-                    if ss + 1 != len(now_talk):
+                if ss < len(now_talk):
+                    if ss != len(now_talk):
+                        if ss == 0:
+                            ss += 1
                         talk = ''
-                        for i in range(ss + 1, len(now_talk)):
+                        for i in range(ss, len(now_talk)):
                             if talk == '':
                                 talk = talk + now_talk[i]
                             else:
                                 talk = talk + ' ' + now_talk[i]
                     else:
-                        talk = now_talk[ss + 1]
+                        talk = now_talk[ss]
                 else:
                     talk = ''
                 talk = b_talk + talk  # print(talk)
@@ -523,6 +549,16 @@ def text_reply(msg):  # 处理群消息
                 #     getjinbi = nowinfo[2]
                 getjinbi = values_dict_who_talk['gold']
                 getjinbi += to
+                try:
+                    RobCount = values_dict_who_talk['RobCount']
+                    if RobCount:
+                        rob_count_list = RobCount.splik('-')
+                    else:
+                        rob_count_list = ['0', '0', '0']
+                except Exception:
+                    rob_count_list = ['0', '0', '0']
+                rob_count_list = [str(int(rob_count_list[0]) + 1), str(int(rob_count_list[1]) + 1), rob_count_list[2]]
+                values_dict_who_talk['RobCount'] = '-'.join(rob_count_list)
                 values_dict_who_talk['gold'] = getjinbi
                 db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(values_dict_who_talk))
                 esl.update_delete_sql("update users set gold=? where id=?", getjinbi, who_talk_id)
@@ -537,7 +573,8 @@ def text_reply(msg):  # 处理群消息
             elif not talk:
                 # itchat.search_chatrooms(msg='消息', toUserName=ActualUserName)
                 # print(12)
-                return '@' + who_talk + '\u2005艾特本喵有何事！'
+                # '@' + who_talk + '\u2005艾特本喵有何事！'
+                return
             if qname in idiom_list:
                 return '@' + who_talk + '\u2005成语接龙-：' + chengyujielong(talk, qname)
         else:
@@ -600,6 +637,7 @@ def text_reply(msg):  # 处理群消息
                 if values_dict_who_talk['robNum'] == 0:
                     return "很抱歉您今日打劫次数已用尽"
                 if not game_users_who:
+                    print(game_users_who, talk)
                     return '打劫失败，对方账号未开通'
                 values_dict = json.loads(game_users_who)
                 # print(values_dict_who_talk, '---', values_dict)
@@ -611,6 +649,14 @@ def text_reply(msg):  # 处理群消息
                     winner = random.randint(0, 1)
                     setjinbi = values_dict['gold']
                     getjinbi = values_dict_who_talk['gold']
+                    try:
+                        RobCount = values_dict_who_talk['RobCount']
+                        if RobCount:
+                            rob_count_list = RobCount.splik('-')
+                        else:
+                            rob_count_list = ['0', '0', '0']
+                    except Exception:
+                        rob_count_list = ['0', '0', '0']
                     if fzhuan == 0:
                         to = random.randint(1, int(setjinbi * 0.4))
                         setjinbi = setjinbi - to
@@ -622,6 +668,8 @@ def text_reply(msg):  # 处理群消息
                         win = '成功'
                         winfo = '抢走了对方'
                         ci = '次！'
+                        rob_count_list = [str(int(rob_count_list[0]) + 1), str(int(rob_count_list[1]) + 1),
+                                          rob_count_list[2]]
                     else:
                         if getjinbi == 1:
                             getjinbi = 2
@@ -634,18 +682,24 @@ def text_reply(msg):  # 处理群消息
                         win = '失败'
                         winfo = '反被对方抢走'
                         ci = '次(抢劫失败不消耗次数)！'
+                        rob_count_list = [str(int(rob_count_list[0]) + 1), rob_count_list[1],
+                                          str(int(rob_count_list[2]) + 1)]
+                    values_dict_who_talk['RobCount'] = '-'.join(rob_count_list)
                     values_dict_who_talk['gold'] = getjinbi
                     db_redis(14).set_value(name=str(qun_id) + '_' + who_talk,
                                            value=json.dumps(values_dict_who_talk))
-                    esl.update_delete_sql("update users set gold=? where id=?", getjinbi, who_talk_id)
+                    esl.update_delete_sql("update users set gold=? and RobCount=? where id=?", getjinbi,
+                                          '-'.join(rob_count_list), who_talk_id)
                     values_dict['gold'] = setjinbi
                     db_redis(14).set_value(name=str(qun_id) + '_' + who, value=json.dumps(values_dict))
                     esl.update_delete_sql("update users set gold=? where id=?", setjinbi, who_id)
+                    rob_str = '\n打劫统计：总次数' + rob_count_list[0] + '-成功次数' + rob_count_list[1] + '-失败次数' \
+                              + rob_count_list[2]
                     if winner == 1:
                         return winern + who_talk + '] 抢劫 [' + who + '] ' + win + '，人品大爆发奖励双倍，' + winfo + str(
-                            to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci
+                            to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci + rob_str
                     return winern + who_talk + '] 抢劫 [' + who + '] ' + win + '，' + winfo + str(
-                        to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci
+                        to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci + rob_str
             except Exception as e:
                 print('报错了' + str(e))
                 return "打劫失败"
@@ -725,7 +779,7 @@ def text_reply(msg):  # 处理群消息
             if pai <= 10:
                 result = db_redis(13).get_owner(owner=str(qun_id))
                 if result:
-                    sign_list = result[1:-1].replace("'", '').split(',')
+                    sign_list = result[1:-1].replace("'", '').split(', ')
                     sign_in_list = sign_list
                 sign_in_list.append(who_talk)
                 db_redis(13).set_value(name=str(qun_id), value=str(sign_in_list))
@@ -754,7 +808,7 @@ def text_reply(msg):  # 处理群消息
                 if pai <= 10:
                     result = db_redis(13).get_owner(owner=str(qun_id))
                     if result:
-                        sign_list = result[1:-1].replace("'", '').split(',')
+                        sign_list = result[1:-1].replace("'", '').split(', ')
                         sign_in_list = sign_list
                     sign_in_list.append(who_talk)
                     db_redis(13).set_value(name=str(qun_id), value=str(sign_in_list))
@@ -782,7 +836,7 @@ def text_reply(msg):  # 处理群消息
                 values_dict['signTime'] = nowTime
                 db_redis(14).set_value(name=str(qun_id) + '_' + who_talk, value=json.dumps(values_dict))
                 esl.update_delete_sql(
-                    "update users set sign_toList=?, point=?, gold=?, signTime=? where id=?", pai, values_dict['gold'],
+                    "update users set sign_toList=?, point=?, gold=?, signTime=? where id=?", pai, values_dict['point'],
                     jinbi, str(nowTime), who_talk_id)
                 return "👻[" + who_talk + ']签到成功\n👻排名：第' + str(pai) + '名\n👻奖励：' + str(rewardPoint) + '积分 ' + str(
                     rewardGold) + '金币\n👻现有资产：' + str(values_dict['point']) + '积分 ' + str(
@@ -940,6 +994,8 @@ def text_reply(msg):  # 处理群消息
             except Exception as e:
                 print("处理踩雷异常了", e)
     elif qname in qun_list:
+        # 聊天机器人菲菲
+        """
         # if "小白" in talk:
         #     talk = talk.replace('小白', '菲菲')
         result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
@@ -950,6 +1006,36 @@ def text_reply(msg):  # 处理群消息
         # re = re.replace('菲菲', '小白')
         if '未获取到相关信息' in re:
             return
+        """
+        # 图灵
+        headers = {
+            "Cookie": "UM_distinctid=172b59426052c6-0ae0ede1b1ab8c-34564a7c-1fa400-172b594260624f; "
+                      "CNZZDATA1000214860=157799959-1592178930-null%7C1592178930; "
+                      "gr_user_id=2dd58613-bba9-44cc-9505-b778900b4b6f; JSESSIONID=0198F61914835FC183DD233109693DAF; "
+                      "gr_session_id_22222-22222-22222-22222=16a60451-d9e5-4b29-a9ca-19b15b7777f6; "
+                      "CNZZDATA1274031688=771303685-1604714880-null%7C1604714880; "
+                      "gr_session_id_22222-22222-22222-22222_16a60451-d9e5-4b29-a9ca-19b15b7777f6=true; "
+                      "login-token=BfVxWx-DeYRLEsCOVF8U1UJaq3LOgWlOuBOj9y01mPpyN42z5d"
+                      "-gdzxzl4ve6Uj1_JXmqDUuGSXRy7lO14_-uSJcYSLFfqW3x49yr6auSTqW4W0UjNC"
+                      "-LcYK_u46UjYt777Vnao9TJ1TV0v4hdI7qf4SECBnBlFG8lWPEnM52znVLd8OEgFTBNaZPdxvqjufpmLZ-JoEfknIIG"
+                      "-EUoVJRliIzeCuw8VI0UiO_YbhC0tXG1lJfwyAS_fextXuHk"
+                      "-twmueDAONjxgEWWy0rppCuXpDpy6duiPeHzVRK4ivO5fjYoBrsTmZmrEKJZnpSwZDNhJpcuXsNk"
+                      "-YTzVOmDQ7xdBC2vOcrXkc1GZzQ-Hdm7U1tMbZtkTtBB7ax0Inlmu31KFoxmHuPB_StoT2OWwY_m_ZOI-i; "
+                      "Hm_lvt_eaa57ca47dacb4ad4f5a257001a3457c=1604717321; "
+                      "Hm_lpvt_eaa57ca47dacb4ad4f5a257001a3457c=1604718789",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3741.400 QQBrowser/10.5.3863.400"}
+        url = "http://www.tuling123.com/robot-chat/robot/chat/708871/WrA7?geetest_challenge=&geetest_validate" \
+              "=&geetest_seccode= "
+        data = {"perception": {"inputText": {"text": str(talk)}}, "userInfo": {"userId": "demo"}}
+        res = requests.post(url, json.dumps(data), headers=headers)
+        result = json.loads(res.text)
+        if result['type'] == 'success':
+            re = result['data']['results'][0]['values']['text']
+        else:
+            re = '未获取到相关信息'
+            print(result)
         print(qname, "--群聊：{}  ({})".format(re, datetime.now()))
         return re
     elif qname in ana_list:
@@ -964,7 +1050,8 @@ def text_reply(msg):  # 处理群消息
                 # else:
                 #     return '@' + who_talk + '\u2005本喵正专心上网课呢，不跟你聊天哦~不如@我说“课程表”，看看我的日程？'
         if who == this:
-            return "抱歉~ 暂时不明白您说什么呢"
+            # return "抱歉~ 暂时不明白您说什么呢"
+            return
 
 
 @itchat.msg_register(itchat.content.NOTE)  # 通知类
@@ -991,9 +1078,13 @@ def note_reply(msg):
         print(t_name + dt + "now" + now)
         now = dt
     talk = '发红包了 时间：' + now
-    this = msg['User']['Self']['DisplayName']
-    if not this:
-        this = msg['User']['Self']['NickName']
+    try:
+        this = msg['User']['Self']['DisplayName']
+        if not this:
+            this = msg['User']['Self']['NickName']
+    except Exception as e:
+        print(e)
+        this = ''
     if '收到红包，请在手机上查看' == msg['Content']:
         if t_name in red_packet_list:
             itchat.send(talk, qname)
@@ -1003,13 +1094,15 @@ def note_reply(msg):
         s = new[0].split('"')
         if len(s) >= 4:
             if s[4] == '加入了群聊':
+                if t_name in '三门峡2.5云车场调试':
+                    return
                 itchat.send(msg['Content'], qname)
                 if '珠峰' in t_name:
                     itchat.send('欢迎"' + s[3] +
                                 '"新朋友，出来报道，请爆照.积极发言，发红包,多参加活动 分享过去的活动图片！'
                                 '不可以发与珠峰群无关的广告，链接和小程序！否则请出！谢谢配合！', qname)
-                elif t_name in '三门峡2.5云车场调试':
-                    return
+                elif '粤宋堂' in t_name:
+                    itchat.send('欢迎"' + s[3] + '"新朋友，新人进群改备注（注意备注格式），发红包！', qname)
                 else:
                     itchat.send('欢迎"' + s[3] + '"新朋友', qname)
                 return
@@ -1260,14 +1353,14 @@ def get_info():
 
 
 # 定时器
-def func():
+def func(keep_on=True):
     global pai, game_dict, sign_in_list
     new_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     pai = 0
-    sign_in_list.clear()
-    if game_dict:
-        for i in game_dict.keys:
-            game_dict[i] = pai, game_dict[i][1], game_dict[i][2], game_dict[i][3]
+    # sign_in_list.clear()
+    # if game_dict:
+    #     for i in game_dict.keys():
+    #         game_dict[i] = pai, game_dict[i][1], game_dict[i][2], game_dict[i][3]
     print("开始删除redis签到记录")
     # 清除用户签到排名
     keys_list = db_redis(14).r.keys()
@@ -1275,10 +1368,11 @@ def func():
         for kl in keys_list:
             res_qun_dict = db_redis(14).get_owner(owner=kl)
             result_dict = json.loads(res_qun_dict)
-            if result_dict['sign_toList'] == 0 and result_dict['robNum'] == robNum:
+            if result_dict['sign_toList'] == 0 and result_dict['robNum'] == robNum and 'RobCount' in result_dict:
                 continue
             result_dict['sign_toList'] = 0
             result_dict['robNum'] = robNum
+            result_dict['RobCount'] = '0-0-0'
             db_redis(14).set_value(name=kl, value=json.dumps(result_dict))
     # 清除群签到排名数据
     keys_list = db_redis(15).r.keys()
@@ -1286,8 +1380,9 @@ def func():
         for kl in keys_list:
             res_qun_dict = db_redis(15).get_owner(owner=kl)
             result_dict = json.loads(res_qun_dict)
-            result_dict['pai'] = 0
-            db_redis(15).set_value(name=kl, value=json.dumps(result_dict))
+            if result_dict['pai'] != 0:
+                result_dict['pai'] = 0
+                db_redis(15).set_value(name=kl, value=json.dumps(result_dict))
     keys_list = db_redis(13).r.keys()
     # 清除签到排行榜库
     if keys_list:
@@ -1296,8 +1391,9 @@ def func():
     print("0点定时存档", set_info())
     print("执行时间", new_time)
     # 如果需要循环调用，就要添加以下方法
-    timing = threading.Timer(86400, func)
-    timing.start()
+    if keep_on:
+        timing = threading.Timer(86400, func)
+        timing.start()
 
 
 def set_common_return_info():
@@ -1344,10 +1440,9 @@ def stop():
 
 if __name__ == '__main__':
     try:
-        # 初始化
-        run()
-        # 登录
-        itchat.auto_login(hotReload=True)
+        run()  # 初始化
+        itchat.auto_login(hotReload=True)  # 登录
+
         now_time = datetime.now()
         # 获取明天年月日
         next_time = now_time + timedelta(days=+1)

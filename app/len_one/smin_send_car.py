@@ -74,7 +74,7 @@ def pay_send_car(host, count, date_time):
         cl = int_list[index]
         if cl in out_list:
             continue
-        # input("当前编号{}当前车牌号:".format(num) + cl)
+        input("当前编号{}当前车牌号:".format(num) + cl)
         try:
             Num = str(round((num / count * 100), 2))
             paySendOutCar.info('正在调用网关为{0}-摄像头为{1}-车牌为{2}-当前进度为{3}'.format(host, outIP, cl, Num + '%'))
@@ -108,15 +108,14 @@ def run(count=1, host='192.168.11.158'):
 
 
 if __name__ == '__main__':
-    # Camera_list = ['192.168.11.226', '192.168.11.233']
-    # # result = open_send_car('192.168.11.158', 5, camera_list=Camera_list)
-    # result = pay_send_car('192.168.11.158', 5, date_time='2020-10-12')
-    # print(result)
-    threading_list = []
-    a1 = threading.Thread(target=run, args=(101, '192.168.11.158',))
-    a2 = threading.Thread(target=run, args=(101, '192.168.11.153',))
-    a1.start()
-    a2.start()
-    threading_list.append(a1)
-    threading_list.append(a2)
-    print(a1, a2, '已启动')
+    Camera_list = ['192.168.11.226', '192.168.11.233']
+    result = pay_send_car('192.168.11.158', 5, date_time='2020-10-12')
+    print(result)
+    # threading_list = []
+    # a1 = threading.Thread(target=run, args=(101, '192.168.11.158',))
+    # a2 = threading.Thread(target=run, args=(101, '192.168.11.153',))
+    # a1.start()
+    # a2.start()
+    # threading_list.append(a1)
+    # threading_list.append(a2)
+    # print(a1, a2, '已启动')
