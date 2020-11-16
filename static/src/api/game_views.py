@@ -167,7 +167,9 @@ if __name__ == '__main__':
     # for t in table_list:
     #     esl.new_table(tables_name=t)
     # res = esl.select_run("select id from GroupChat GC where name='诗和远方｜户外'")
-    res = esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
+    # res = esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
+    # res = esl.select_run('select name, gold from users where GroupChat_ID=19 order by gold desc limit 0,10')
+    res = esl.select_run("select * from users where GroupChat_ID = 19 and name=%s" % "J'adore")
     print(res)
     # who_talk_list = esl.select_run('''select max(id) from users where name=?''', "Mr. Black")
     # print(who_talk_list)

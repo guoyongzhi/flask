@@ -64,14 +64,15 @@ def listdir(path, list_name):
     return path, list_name
 
 # file_name(r'G:\work\tengo\static')
-a = 'uploads'
-print(listdir(r'G:\work\tengo\static', a))
 
-s = 143641343543
-url = '/page/admin/home'
-print(str(s)[6:12])
-uu = url.split('/')
-if uu[2] == 'admin':
-    print(1)
-else:
-    print(2)
+# a = 'uploads'
+# print(listdir(r'G:\work\tengo\static', a))
+#
+# s = 143641343543
+# url = '/page/admin/home'
+# print(str(s)[6:12])
+# uu = url.split('/')
+# if uu[2] == 'admin':
+#     print(1)
+# else:
+#     print(2)

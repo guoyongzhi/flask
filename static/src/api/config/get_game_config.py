@@ -1,4 +1,5 @@
-import configparser
+
+from configparser import ConfigParser
 import os
 
 
@@ -8,7 +9,7 @@ class Config(object):
         config_path = os.path.join(path, 'game_config.ini')
         # print(config_path)
         self.path = config_path
-        self.cf = configparser.ConfigParser()
+        self.cf = ConfigParser()
         self.cf.read(self.path, encoding="utf-8-sig")
     
     def get_pu(self, pu_name, dd_name):
@@ -25,6 +26,17 @@ class Config(object):
     def get_options(self, PU):
         options = self.cf.options(PU)
         return options
+
+
+class Config_dict(ConfigParser):
+    def __init__(self):
+        self.conf_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'base.ini')
+        super().__init__()
+        super().read(self.conf_name, encoding='utf-8')
+    
+    def save_data(self, section, option, value):
+        super().set(section=section, option=option, value=value)
+        super().write(fp=open(self.conf_name, 'w'))
 
 
 if __name__ == '__main__':

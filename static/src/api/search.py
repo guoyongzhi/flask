@@ -21,8 +21,7 @@ def get_pages(html, count):
         topic_times = each_topic.find('td', class_='last')  # 搜索指数
         topic_rank = each_topic.find('td', class_='first')  # 排名
         topic_name = each_topic.find('td', class_='keyword')  # 标题目
-        
-        if topic_rank != None and topic_name != None and topic_times != None:
+        if topic_rank is not None and topic_name is not None and topic_times is not None:
             topic_rank = each_topic.find('td', class_='first').get_text().replace(' ', '').replace('\n', '')
             topic_name = each_topic.find('td', class_='keyword').get_text().replace(' ', '').replace('\n', '')
             topic_times = each_topic.find('td', class_='last').get_text().replace(' ', '').replace('\n', '')
@@ -43,7 +42,7 @@ def main(count=10):
 
 
 if __name__ == '__main__':
-    # print(main())
+    print(main())
     """ 处理本地数据未同步至redis（已经执行）
     import json
     from axf.dbredis import db_redis
@@ -109,22 +108,3 @@ if __name__ == '__main__':
     # sign_list = result[1:-1].replace("'", '').split(',')
     # sign_in_list = sign_list
     # print(str(sign_in_list))
-    
-    """
-    
-    qun_id = 1
-    sign_in_list = []
-    a = ['珠峰', '🍦🍦🍦', 'Jung(小华)', '"Jadore"', 'Song❤🚴🏸🚶', 'A小燕', '槑俐👣  \\\\\\\\U0001f929', '过客', 'LIU ', '成成']
-    for ai in a:
-        result = db_redis(13).get_owner(owner=str(qun_id))
-        # print(result)
-        if result:
-            sign_list = result[1:-1].replace("'", '').split(',')
-            print(sign_list)
-            sign_in_list = sign_list
-        sign_in_list.append(ai)
-        db_redis(13).r.rpush(str(qun_id), *tuple(sign_in_list))
-        sign_in_list.clear()
-        input()
-    """
-

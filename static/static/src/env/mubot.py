@@ -78,10 +78,6 @@ class mubot(object):
             print(mp3name, "合成完成")
 
     def wenben_get_yuyin(self, wenben):
-        APP_ID = '16007067'
-        API_KEY = 'F4YeOyGqjRfy2ZrdxZO2Y6pi'
-        SECRET_KEY = 'CCwgqsTpO6TD3ebMBzzlVZwHg5w4iz26'
-        client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
         result = client.synthesis(wenben, 'zh', 1, {
             'vol': 8,  # 音量
             'per': 0,  # 音色
