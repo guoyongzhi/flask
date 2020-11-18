@@ -163,13 +163,53 @@ def Boss_prop_drop(Boss_name, number, total_prop):
 if __name__ == '__main__':
     #  初始化
     # table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
+    import json
+    from axf.dbredis import db_redis
     esl = execute_sql_lite()
+    # users_key_list = db_redis(14).get_db_keys()
+    # error_list = []
+    # sum_list = []
+    # no_list = []
+    # dd_list = []
+    # for u in users_key_list:
+    #     qun_id = u[:2]
+    #     try:
+    #         qun_id = int(qun_id)
+    #     except Exception as e:
+    #         print(e)
+    #         continue
+    #     if qun_id != 19:
+    #         continue
+    #     users = json.loads(db_redis(14).get_owner(u))
+    #     res = esl.update_delete_sql("update users set point=?, gold=? where id=? and GroupChat_ID=?",
+    #                                 users['point'], users['gold'], users['user_id'], qun_id)
+    #     # res = esl.select_run('select name from users where id=? and GroupChat_ID=?', users['user_id'], qun_id)
+    #     if res:
+    #         if res[0][0] is None:
+    #             error_list.append(u)
+    #         elif res[0][0]:
+    #             if res[0][0] == 'ok':
+    #                 sum_list.append(u)
+    #             else:
+    #                 dd_list.append(u)
+    #         else:
+    #             dd_list.append(u)
+    #     else:
+    #         no_list.append(u)
+    # # print(sum_list)
+    # print(error_list)
+    # print(no_list)
+    # print(dd_list)
+    
+    # ree = esl.select_run('select * from (select count(name) sum, name from users group by name,
+    # GroupChat_ID) a where a.sum>1')
+    # print(ree)
     # for t in table_list:
     #     esl.new_table(tables_name=t)
     # res = esl.select_run("select id from GroupChat GC where name='诗和远方｜户外'")
     # res = esl.insert_sql(table_name='users', sql=[1, 23, '', 123, 0, 0, 0, 0, 0, 0, 123])
-    # res = esl.select_run('select name, gold from users where GroupChat_ID=19 order by gold desc limit 0,10')
-    res = esl.select_run("select * from users where GroupChat_ID = 19 and name=%s" % "J'adore")
+    res = esl.select_run('select name, gold from users where GroupChat_ID=19 group by id order by gold desc limit 0,10')
+    # res = esl.select_run("select * from users where GroupChat_ID = 19 and name=%s" % "J'adore")
     print(res)
     # who_talk_list = esl.select_run('''select max(id) from users where name=?''', "Mr. Black")
     # print(who_talk_list)

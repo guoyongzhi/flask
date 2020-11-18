@@ -951,7 +951,7 @@ def text_reply(msg):  # 处理群消息
             qun_dict['this_num'] = this_num
             db_redis(15).set_value(name=qname, value=json.dumps(qun_dict, ensure_ascii=False))
             # 本地存储
-            game_dict[who_talk] = result_dict['sign_toList'], result_dict['point'], result_dict['gold'], now_time
+            game_dict[who_talk] = result_dict['sign_toList'], result_dict['point'], result_dict['gold'], nowTime
             return "@ " + who_talk + "兑换成功，祝您游戏愉快~"
     elif '讲个笑话' == talk or '笑话' == talk or '讲笑话' == talk:
         result = requests.post("http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + talk)
