@@ -60,11 +60,18 @@ def pay_send_car(host, count, date_time):
                 sun += 1
             else:
                 fail += 1
+            # time.sleep(10)
+            # res = requests.post('http://' + host + ':8019/api/v1/WebCommon/TestPlateResult',
+            #                     params={'ip': inIP, 'platenumber': car}, timeout=300)
+            # if res.status_code == 200:
+            #     sun += 1
+            # else:
+            #     fail += 1
         except Exception as e:
             print(e)
             error += 1
         num += 1
-        time.sleep(random.randint(6, 12))
+        time.sleep(random.randint(10, 18))
     int_list = count_list.copy()
     out_list = []
     num = 1
@@ -89,7 +96,7 @@ def pay_send_car(host, count, date_time):
             print(e)
             error += 1
         num += 1
-        time.sleep(random.randint(6, 12))
+        time.sleep(random.randint(10, 18))
     return sun, error, fail
 
 
@@ -109,7 +116,7 @@ def run(count=1, host='192.168.11.158'):
 
 if __name__ == '__main__':
     Camera_list = ['192.168.11.226', '192.168.11.233']
-    result = pay_send_car('192.168.11.158', 5, date_time='2020-11-18')
+    result = pay_send_car('192.168.11.158', 2, date_time='2020-11-18')
     print(result)
     # threading_list = []
     # a1 = threading.Thread(target=run, args=(101, '192.168.11.158',))

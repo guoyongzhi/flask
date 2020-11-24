@@ -1,6 +1,6 @@
 # 群表(id，群名称，微信群名称)
 GroupChat_table_sql = 'create table GroupChat(id integer PRIMARY KEY AUTOINCREMENT not NULL,name text, username text)'
-# 用户表（id，群id，用户名称，昵称，微信用户名称，签到排名，积分，金币，签到时间，战斗力，隐藏分，添加时间）
+# 用户表（id，群id，用户名称，昵称，微信用户名称，签到排名，积分，金币，签到时间，战斗力，隐藏分，添加时间，打劫统计（总数-成功-失败））
 users_table_sql = 'create table users(id integer PRIMARY KEY AUTOINCREMENT not NULL,' \
                   'GroupChat_ID int, name text, nickname text, username text,' \
                   ' sign_toList int, point int, gold int, signTime text, ' \

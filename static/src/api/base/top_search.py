@@ -38,7 +38,7 @@ def main(count=10):
     url = 'http://top.baidu.com/buzz?b=1&fr=20811'
     headers = {'User-Agent': 'Mozilla/5.0'}
     html = get_html(url, headers)
-    return get_pages(html, count)
+    return get_pages(html, count)[:-2]
 
 
 if __name__ == '__main__':

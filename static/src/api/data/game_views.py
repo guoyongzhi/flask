@@ -1,9 +1,8 @@
 import sqlite3
 import setting
-from static.src.api.gime_table import *
+from static.src.api.data.gime_table import *
 import numpy as np
 from static.src.api.config.get_game_config import *
-from django.db import connection
 
 
 def open_db(db):
@@ -31,7 +30,7 @@ class Users:
         self.signTime = parameter.get('signTime', '')
         self.fightingCombat = parameter.get('fightingCombat', 0)
         self.hiddenScore = parameter.get('hiddenScore', 0)
-        self.addTime = parameter.get('sign_toList', '')
+        self.addTime = parameter.get('addTime', '')
     
     @classmethod
     def add(cls, users):
@@ -43,11 +42,11 @@ class Users:
 
 class execute_sql_lite(object):
     def __init__(self):
-        database = 'games.db'
+        database = r'data\games.db'
         if os.path.exists(database):
             self.db = database
         else:
-            database_dir = os.path.join(setting.APP_ROOT + r'static\src\api')
+            database_dir = os.path.join(setting.APP_ROOT + r'static\src\api\data')
             self.db = os.path.join(database_dir + database_dir)
         if not os.path.exists(self.db):
             print("sqlite数据文件未找到")
@@ -163,8 +162,6 @@ def Boss_prop_drop(Boss_name, number, total_prop):
 if __name__ == '__main__':
     #  初始化
     # table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
-    import json
-    from axf.dbredis import db_redis
     esl = execute_sql_lite()
     # users_key_list = db_redis(14).get_db_keys()
     # error_list = []
