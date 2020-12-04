@@ -12,7 +12,7 @@ import flask
 from flask import *
 from werkzeug.utils import secure_filename
 from app.src.openpyxl_excel import openpyxl_excel
-from app.src.common_method import CommonMethod
+from app.src.common_method import Parameter
 from setting import APP_ROOT
 # from app.src import openpyxl_excel
 from app import app
@@ -21,7 +21,6 @@ from flask import request, render_template, make_response, send_from_directory, 
 
 # from flask.views import MethodView
 # from flask_login import login_required, current_user
-
 from app.src import openpyxl_excel
 from app.len_one.smin_send_car import *
 
@@ -78,7 +77,7 @@ def test_test():
             except Exception:
                 headers = dict(User_headers, **date_dict['headers'])
         else:
-            date_dict = CommonMethod(request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
+            date_dict = Parameter(temp=request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
                                                                 'methodsType')
             Data = json.loads(date_dict['date'])
             try:
@@ -147,7 +146,7 @@ def upload():
 def get_instruct_cache():
     # print(request.values)
     print(request.get_json())
-    # date_dict = CommonMethod(request.values).common_all('sn', 'index', 'pageSize')
+    # date_dict = Parameter(temp=request.values).common_all('sn', 'index', 'pageSize')
     # print(date_dict)
     result = dict(ID=1, Instruction=1, InstructData="")
     res = {'msg': "1", "result": [result], "code": 1}
@@ -159,7 +158,7 @@ def get_instruct_cache():
 def get_permission_list():
     # print(request.values)
     print(request.get_json())
-    # date_dict = CommonMethod(request.values).common_all('camaraId', 'indx', 'size')
+    # date_dict = Parameter(temp=request.values).common_all('camaraId', 'indx', 'size')
     # print(date_dict)
     result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
                   stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
@@ -171,7 +170,7 @@ def get_permission_list():
 
 @app.route('/Parking/GetAddPermissionList', methods=['GET', 'POST'])
 def get_add_permission_list():
-    date_dict = CommonMethod(request.values).common_all('carNums')
+    date_dict = Parameter(temp=request.values).common_all('carNums')
     print(date_dict)
     result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
                   stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
@@ -187,7 +186,7 @@ def thumb_receive():
         try:
             file = request.files['file']
             # print(request.get_json())
-            date_dict = CommonMethod(request.values).common_all('Path', "CarNum", "IsReal")
+            date_dict = Parameter(temp=request.values).common_all('Path', "CarNum", "IsReal")
             print(date_dict)
             if file:
                 filename = secure_filename(file.filename)
@@ -221,11 +220,11 @@ def send_car():
     try:
         date_dict = request.get_json()
         if not date_dict:
-            date_dict = CommonMethod(request.values).common_all('count')
+            date_dict = Parameter(temp=request.values).common_all('count')
     except Exception:
         return jsonify("参数错误或缺失")
     car_list = []
-    if not CommonMethod.common_check_required(date_dict, 'count'):
+    if not Parameter.common_check_required(date_dict, 'count'):
         return jsonify("参数错误或缺失")
     for car in range(0, int(date_dict['count'])):
         car_list.append(car_num())
@@ -237,11 +236,11 @@ def send_send_car():
     try:
         date_dict = request.get_json()
         if not date_dict:
-            date_dict = CommonMethod(request.values).common_all('host', 'ip', 'car')
+            date_dict = Parameter(temp=request.values).common_all('host', 'ip', 'car')
     except Exception:
         return jsonify("参数错误或缺失")
     car_list = []
-    if not CommonMethod.common_check_required(date_dict, 'host', 'ip', 'car'):
+    if not Parameter.common_check_required(date_dict, 'host', 'ip', 'car'):
         return jsonify("参数错误或缺失")
     sun = fail = error = 0
     car_nums = date_dict['car']
@@ -604,9 +603,21 @@ def simulation_Send_Car():
     try:
         info = request.get_json()
         if info is None:
-            info = CommonMethod(request.values).common_all('IP', 'count', 'Camera_list')
+            info = Parameter(temp=request.values).common_all('IP', 'count', 'Camera_list')
         simulationSendCar_result = open_send_car(info['IP'], int(info['count']), info['Camera_list'].split(','))
     except Exception as e:
         simulationSendCar_result = 'error'
         print(e)
     return jsonify(simulationSendCar_result)
+
+
+@app.route('/RouteParameter', methods=['get', 'post'])
+def RouteParameter():
+    try:
+        if request.values:
+            parameter_dict = Parameter(request.values.items())
+        else:
+            parameter_dict = Parameter(request.get_json())
+        return jsonify(parameter_dict)
+    except Exception as e:
+        return jsonify(e)

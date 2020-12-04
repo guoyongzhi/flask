@@ -55,13 +55,13 @@ class mubot(object):
                 a = self.Get_WenBen(filename, i)
                 try:
                     res += self.wenben_get_yuyin(a)
-                except:
+                except Exception:
                     print("错误返回dict" + filename, i)
         elif changdu < 2048:
             a = self.Get_WenBen(filename, 0)
             try:
                 res += self.wenben_get_yuyin(a)
-            except:
+            except Exception:
                 print("错误返回dict" + filename)
         else:
             for i in range(1, int(changdu / 2048) + 1):
@@ -77,7 +77,8 @@ class mubot(object):
                 f.write(res)
             print(mp3name, "合成完成")
 
-    def wenben_get_yuyin(self, wenben):
+    @classmethod
+    def wenben_get_yuyin(cls, wenben):
         result = client.synthesis(wenben, 'zh', 1, {
             'vol': 8,  # 音量
             'per': 0,  # 音色
@@ -87,7 +88,8 @@ class mubot(object):
         # print(result)
         return result
 
-    def Get_WenBen(self, filename, lenth):
+    @classmethod
+    def Get_WenBen(cls, filename, lenth):
         f = open(filename, 'r', encoding='utf-8')
         changdu = 0
         ab = ''
@@ -101,7 +103,7 @@ class mubot(object):
         f.close()
         return ab
 
-    def delbialline(self):
+    def del_bai_line(self):
         infp = open(self.path, 'r', encoding='utf-8')
         outfp = open('alll.txt', 'w', encoding='utf-8')
         lines = infp.readlines()
@@ -113,5 +115,5 @@ class mubot(object):
 
 
 # mubot().get_zhang()
-# mubot().delbialline()
+# mubot().del_bai_line()
 mubot().get_len(r"I:\work\flask\static\static\src\env", "政治")

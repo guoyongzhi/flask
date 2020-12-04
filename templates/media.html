@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="navigator.mediaDevices.getUserMedia()示例">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta id="theme-color" name="theme-color" content="#fff">
+    <title>获取视频和音频设备API navigator.mediaDevices.getUserMedia()</title>
+    <style>
+        div.select {
+            margin: 0 0 1em 0;
+        }
+        video {
+            background: #222;
+            margin: 0 0 20px 0;
+            width: 100%;
+        }
+        a {
+            color: #15c;
+            font-weight: 300;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div><a href="/" target="_blank">本站首页</a></div>
+<hr>
+<div id="container">
+    <div>主要使用navigator.mediaDevices.getUserMedia()，兼容性只在chrome中测试通过</div>
+    <div class="select">
+        <label for="audioSource">音频源: </label><select id="audioSource"></select>
+    </div>
+    <script>
+        'use strict';
+        var audioSelect = document.querySelector('select#audioSource');
+        navigator.mediaDevices.enumerateDevices().then(gotDevices).then(getStream).catch(handleError);
+        audioSelect.onchange = getStream;
+        function gotDevices(deviceInfos) {
+            for (var i = 0; i !== deviceInfos.length; ++i) {
+                var deviceInfo = deviceInfos[i];
+                var option = document.createElement('option');
+                option.value = deviceInfo.deviceId;
+                if (deviceInfo.kind === 'audioinput') {
+                    option.text = deviceInfo.label || 'microphone ' + (audioSelect.length + 1);
+                    audioSelect.appendChild(option);
+                } else {
+                    console.log('Found one other kind of source/device: ', deviceInfo);
+                }
+            }
+        }
+        function getStream() {
+            if (window.stream) {
+                window.stream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+            }
+            var constraints = {
+                audio: {
+                    deviceId: {
+                        // deviceInfo.deviceId
+                        exact: audioSelect.value
+                    }
+                }
+            };
+        }
+        function handleError(error) {
+            console.log('Error: ', error);
+        }
+    </script>
+</div>
+</body>
+</html>

@@ -14,3 +14,19 @@ def get_nickname(number):
     else:
         ty = '新手上路'
     return ty
+
+
+def is_talk_keyword(talk='', keyword=[]):
+    """
+    判断话语是否是关键字
+    :param talk: 话语
+    :type talk: str
+    :param keyword: 关键字
+    :type keyword: list
+    :return: 是否存在
+    :rtype: bool
+    """
+    for key in keyword:
+        if talk == key:
+            return True
+    return False

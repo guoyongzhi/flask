@@ -1,66 +1,70 @@
 
-""" 处理本地数据未同步至redis（已经执行）
-import json
-from axf.dbredis import db_redis
-with open('config.txt', 'r', encoding='utf-8') as file:
-    a_list = []
-    aa = file.readlines()
-    for a in aa:
-        a_list.append(a[:-4])
-    file.close()
-    game_dict = json.loads(a_list[2])
-users_keys_list = db_redis(14).r.keys()
-del_list = []
-# print(game_dict)
-for g in game_dict.keys():
-    if str('19_') + g in users_keys_list:
-        del_list.append(g)
-        res = db_redis(14).get_owner(str('19_') + g)
-        new = game_dict[g]
-        result = json.loads(res)
-        result['point'] += new[1]
-        result['gold'] += new[2]
-        print(res, game_dict[g])
-        print(result)
-        re = db_redis(14).set_value(name=str('19_') + g, value=json.dumps(result))
-for i in del_list:
-    del game_dict[i]
-print(game_dict.keys())
-qun_list = user_list = user_idiom_list = red_packet_list = idiom_list = ana_list = users_list = sign_in_list = []
-this_num = 0
-idiom_dict = dict()
-with open('config.txt', 'w', encoding='utf-8') as file:
-    file.write('.'.join(qun_list))
-    file.write('---\n')
-    file.write('.'.join(user_list))
-    file.write('---\n')
-    file.write(json.dumps(game_dict))
-    file.write('---\n')
-    file.write('.'.join(user_idiom_list))
-    file.write('---\n')
-    file.write('.'.join(red_packet_list))
-    file.write('---\n')
-    file.write('.'.join(idiom_list))
-    file.write('---\n')
-    file.write(str(this_num))
-    file.write('---\n')
-    file.write('.'.join(ana_list))
-    file.write('---\n')
-    file.write('.'.join(sign_in_list))
-    file.write('---\n')
-    file.write(json.dumps(idiom_dict))
-    file.write('---\n')
-    file.write('.'.join(users_list))
-    file.write('---\n')
-    file.close()
-"""
-# qun_id = 19
-# from axf.dbredis import db_redis
-# result = db_redis(13).get_owner(owner=str(qun_id))
-# if result:
-#     sign_list = result[1:-1].replace("'", '').split(', ')
-#     sign_in_list = sign_list
-# print(str(sign_in_list))
-# sign_list = result[1:-1].replace("'", '').split(',')
-# sign_in_list = sign_list
-# print(str(sign_in_list))
+class search(list):
+    def __init__(self, chat_list=None, source=None):
+        if chat_list:
+            super(search, self).__init__(chat_list)
+        self.source = source
+        
+    @classmethod
+    def __a(cls):
+        print("私有函数__a")
+    
+    def b(self):
+        self.__a()
+        
+    @classmethod
+    def _c(cls):
+        print("私有函数_c")
+
+
+class search_dict(dict):
+    def __init__(self, date_dict=None, source=None):
+        if date_dict:
+            super(search_dict, self).__init__(date_dict)
+        self.source = source
+
+
+# date = search_dict(dict(a=1, b=2, c=3))
+# print(date, type(date))
+# print(date.items())
+# print(date.keys())
+# # print(date.has_key('a'))
+# if 'a' and 'b' and 'c' in date:
+#     print("存在")
+
+
+def what_talk(talk='', keyword=[]):
+    """
+    判断话语是否是关键字
+    :param talk: 话语
+    :type talk: str
+    :param keyword: 关键字
+    :type keyword: list
+    :return: 是否存在
+    :rtype: bool
+    """
+    for key in keyword:
+        if talk == key:
+            return True
+    return False
+
+
+# talk = '等等就来了'
+# if what_talk(talk, ['等等', '就', '我']):
+#     print("存在")
+#
+# if ('等等' or '就' or '我') in talk:
+#     print("存在12")
+# a = 'e19d5cd5af0378da05f63f891c7467af'
+# print(a.upper())
+# print(len(a))
+case_index = '1'
+file = r'I:\work\TestUI\data\identityface\login_case.xlsx'
+if case_index and case_index != file:
+    print("重置")
+# d = dict(a=1, b=2, c=3)
+# import json
+# json.dumps()
+
+# search = search(chat_list=[1, 2, 3], source=1)
+# print(search, type(search))

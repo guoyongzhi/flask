@@ -147,10 +147,10 @@ class Rob(object):
                 self.esl.update_delete_sql("update users set gold=? where id=?", setjinbi, values_dict['user_id'])
                 rob_str = '\n打劫统计：总次数' + rob_count_list[0] + '-成功次数' + rob_count_list[1] + '-失败次数' + rob_count_list[2]
                 if double > 1:
-                    return winern + self.who_talk + '] 抢劫 [' + self.who + '] ' + win + '，人品大爆发奖励' + self.d_list[
+                    return winern + self.who_talk + ']抢劫[' + self.who + ']' + win + '，人品大爆发奖励' + self.d_list[
                         double] + '倍，' + winfo + str(to) + '金币！\n⚠您还可以抢劫' + str(
                         values_dict_who_talk['robNum']) + ci + rob_str
-                return winern + self.who_talk + '] 抢劫 [' + self.who + '] ' + win + '，' + winfo + str(
+                return winern + self.who_talk + ']抢劫[' + self.who + ']' + win + '，' + winfo + str(
                     to) + '金币！\n⚠您还可以抢劫' + str(values_dict_who_talk['robNum']) + ci + rob_str
         except Exception as e:
             print('报错了' + str(e))

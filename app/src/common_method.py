@@ -2,8 +2,11 @@
 
 # 公共获取参数
 
-class CommonMethod(object):
-    def __init__(self, temp):
+class Parameter(dict):
+    def __init__(self, parameter_dict=None, source=None, temp=None):
+        if parameter_dict:
+            super(Parameter, self).__init__(parameter_dict)
+        self.source = source
         self.temp = temp
         
     def select_page_common(self, index, page, key, *args, **kwargs):
@@ -64,5 +67,5 @@ if __name__ == '__main__':
     print(ab(b))
     print(ab('1223', 'dd', None))
     
-    cm = CommonMethod(a)
+    cm = Parameter(a)
 

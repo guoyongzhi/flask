@@ -140,13 +140,12 @@ if __name__ == '__main__':
     # table_list = ['GroupChat', 'users', 'Backpack', 'shop', 'monster', 'prop']
     # for t in table_list:
     #     esl.new_table(tables_name=t)
-    users_keys_list = db_redis(14).r.keys()
+    users_keys_list = db_redis(3).r.keys()
     for u in users_keys_list:
-        res = db_redis(14).get_owner(u)
+        res = db_redis(3).get_owner(u)
         try:
             result = json.loads(res)
-            if not result['user_id'] or isinstance(result['robNum'], str):
-                print(u, res)
+            print(result)
         except Exception as e:
             print(e, res, u)
     # keys_list = db_redis(14).r.keys()
