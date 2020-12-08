@@ -4,7 +4,7 @@ import json
 import os
 import struct
 # import threading
-# import logger
+import logger
 import flask
 # import time
 # import requests
@@ -78,7 +78,7 @@ def test_test():
                 headers = dict(User_headers, **date_dict['headers'])
         else:
             date_dict = Parameter(temp=request.values).common_all('hostPort', 'urlAddr', 'date', 'headers', 'dateType',
-                                                                'methodsType')
+                                                                  'methodsType')
             Data = json.loads(date_dict['date'])
             try:
                 headers = dict(User_headers, **json.loads(date_dict['headers']))
@@ -148,8 +148,8 @@ def get_instruct_cache():
     print(request.get_json())
     # date_dict = Parameter(temp=request.values).common_all('sn', 'index', 'pageSize')
     # print(date_dict)
-    result = dict(ID=1, Instruction=1, InstructData="")
-    res = {'msg': "1", "result": [result], "code": 1}
+    instruct_cache_result = dict(ID=1, Instruction=1, InstructData="")
+    res = {'msg': "1", "result": [instruct_cache_result], "code": 1}
     # print(res)
     return jsonify(res)
 
@@ -157,13 +157,13 @@ def get_instruct_cache():
 @app.route('/Parking/GetPermissionList', methods=['GET', 'POST'])
 def get_permission_list():
     # print(request.values)
-    print(request.get_json())
+    # print(request.get_json())
     # date_dict = Parameter(temp=request.values).common_all('camaraId', 'indx', 'size')
     # print(date_dict)
-    result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
-                  stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
-                  permissionGroupID=1, userID=1001, isUpdate=False)
-    res = {'msg': "1", "result": [result], "code": 1}
+    permission_list_result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
+                                  start="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0,
+                                  _state=1, permissionGroupID=1, userID=1001, isUpdate=False)
+    res = {'msg': "1", "result": [permission_list_result], "code": 1}
     # print(res)
     return jsonify(res)
 
@@ -171,11 +171,11 @@ def get_permission_list():
 @app.route('/Parking/GetAddPermissionList', methods=['GET', 'POST'])
 def get_add_permission_list():
     date_dict = Parameter(temp=request.values).common_all('carNums')
-    print(date_dict)
-    result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1, carType="小型车",
-                  stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00", matchLevel=1, state=0, _state=1,
-                  permissionGroupID=1, userID=1001, isUpdate=False)
-    res = {'msg': "1", "result": [result], "code": 1}
+    # print(date_dict)
+    add_permission_list_result = dict(ip="192.168.11.237", port=8131, plateNumber="粤A6R875", plateState=1,
+                                      carType="小型车", stat="2020-09-01 00:00:00", end="2080-01-01 00:00:00",
+                                      matchLevel=1, state=0, _state=1, permissionGroupID=1, userID=1001, isUpdate=False)
+    res = {'msg': "1", "result": [add_permission_list_result], "code": 1}
     # print(res)
     return jsonify(res)
 
@@ -187,7 +187,7 @@ def thumb_receive():
             file = request.files['file']
             # print(request.get_json())
             date_dict = Parameter(temp=request.values).common_all('Path', "CarNum", "IsReal")
-            print(date_dict)
+            # print(date_dict)
             if file:
                 filename = secure_filename(file.filename)
                 print(filename)
@@ -242,7 +242,7 @@ def send_send_car():
     car_list = []
     if not Parameter.common_check_required(date_dict, 'host', 'ip', 'car'):
         return jsonify("参数错误或缺失")
-    sun = fail = error = 0
+    run_sun = run_fail = run_error = 0
     car_nums = date_dict['car']
     re = car_nums.split(',')
     if len(re) == 1:
@@ -260,16 +260,16 @@ def send_send_car():
             res = requests.post('http://' + date_dict['host'] + ':8019/api/v1/WebCommon/TestPlateResult',
                                 params={'ip': date_dict['ip'], 'platenumber': c}, timeout=3)
             if res.status_code == 200:
-                sun += 1
+                run_sun += 1
                 car_list.append(c)
             else:
-                fail += 1
+                run_fail += 1
             if len(re) != 1:
                 time.sleep(3)
         except Exception as e:
             print(e)
-            error += 1
-    result_dict = dict(msg=sun, fail=fail, error=error, sun_list=car_list)
+            run_error += 1
+    result_dict = dict(msg=run_sun, fail=run_fail, error=run_error, sun_list=car_list)
     return jsonify(result_dict)
 
 
@@ -284,6 +284,7 @@ GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 buffer = ""
 buffer_utf8 = b""
 length_buffer = 0
+apiSecret = "AJWG3XSJWKYGQH6EV4WG2LWNQO8JV53WSH1PUMP1"
 """
 经测试发现IE 11浏览器在成功建立websocket连接后，会间隔30s发送空信息给服务器以验证是否处于连接状态，
 因此服务区需要对收到的数据进行解码并判断其中载荷内容是否为空，如为空，应不进行广播
@@ -374,7 +375,6 @@ def sendMessage(message):
     """
     global connection_list
     global lock
-    result = "OK"
     lock.acquire()
     try:
         send_msg = b""  # 使用bytes格式,避免后面拼接的时候出现异常
@@ -416,8 +416,8 @@ def sendMessage(message):
     finally:
         # print("释放锁")
         lock.release()
-        result = "error"
-    return result
+        lock_result = "error"
+    return lock_result
 
 
 def send_receive_message(message):  # 直接回复
@@ -461,9 +461,29 @@ def generate_token(WebSocketKey):
     return WebSocketToken.decode('utf-8')
 
 
+def get_str_sha1_secret_str(res: str):  # 签名验证加密
+    import hashlib
+    """
+    使用sha1加密算法，返回str加密后的字符串
+    """
+    sha = hashlib.sha1(res.encode('utf-8'))
+    encrypts = sha.hexdigest()
+    print(encrypts)
+    return encrypts
+
+
+def create_sign():  # 生成签名方法
+    timestamp = time.time()
+    nonce = "96e042345ae46c59"
+    EventType = 0
+    InfoCode = "0000XC"
+    Data = []
+    return get_str_sha1_secret_str()
+
+
 @app.route('/ws')
 def echo_websocket():
-    global i, connection_list, GUID, buffer, buffer_utf8, length_buffer
+    global i, connection_list, GUID, buffer, buffer_utf8, length_buffer, apiSecret
     global g_code_length
     global g_header_length
     global return_time
@@ -516,9 +536,6 @@ def echo_websocket():
                                 send_receive_message(buffer_utf8)
                             except Exception:
                                 continue
-                            if int(loop_time.tm_sec) >= 30:
-                                print("收到心跳并已回复" + nowTime)
-                                return_time = nowTime
                 else:
                     nowTime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
                     new_time = time.strptime(nowTime, '%Y-%m-%d %H:%M:%S')
@@ -538,10 +555,17 @@ def echo_websocket():
                         else:
                             try:
                                 json_str = json.loads(receive_message)
+                                str_sign = "EventType=" + json_str['EventType'] + "InfoCode=" + json_str["InfoCode"] +\
+                                           "nonce=" + json_str['nonce'] + "timestamp=" + json_str["timestamp"] + \
+                                           apiSecret
+                                encrypts = get_str_sha1_secret_str(str_sign)
+                                if encrypts != json_str['sign']:
+                                    print("签名错误，，不做处理")
+                                    continue
                                 if json_str['EventType'] != 0 and json_str['EventType'] != 1:
                                     if json_str['EventType'] == 1005 or json_str['EventType'] == 3006:
                                         receive_log = logger.logs("receive")
-                                        receive_log.info(str(receive_message))
+                                        receive_log.info(str(json_str))
                                     else:
                                         print(nowTime, receive_message)
                                 else:
@@ -552,7 +576,7 @@ def echo_websocket():
                                                 print("收到并已回复心跳：", nowTime, receive_message)
                                                 return_time = nowTime
                                         if json_str['InfoCode'] is not None:
-                                            print(nowTime, receive_message)
+                                            print(nowTime, str(json_str))
                             except Exception as e:
                                 if 'Socket is dead' in str(e):
                                     delete_connection(str(i))

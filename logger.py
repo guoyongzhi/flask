@@ -19,7 +19,7 @@ class logs(object):
         LEVELS = {'NOSET': logging.NOTSET, 'DEBUG': logging.DEBUG, 'INFO': logging.INFO, 'WARNING': logging.WARNING,
                   'ERROR': logging.ERROR, 'CRITICAL': logging.CRITICAL}
         # 创建文件目录
-        logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"static\src\api\chat")
+        logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), r"logs2")
         if os.path.exists(logs_dir) and os.path.isdir(logs_dir):
             pass
         else:

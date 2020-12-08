@@ -117,7 +117,7 @@ def run(count=1, host='192.168.11.158'):
 
 if __name__ == '__main__':
     Camera_list = ['192.168.11.226', '192.168.11.233']
-    result = pay_send_car('192.168.11.158', 3, date_time='2020-11-26')
+    result = pay_send_car('192.168.11.158', 2, date_time='2020-11-26')
     print(result)
     # threading_list = []
     # a1 = threading.Thread(target=run, args=(101, '192.168.11.158',))

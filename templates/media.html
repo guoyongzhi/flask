@@ -5,7 +5,7 @@
     <meta name="description" content="navigator.mediaDevices.getUserMedia()示例">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta id="theme-color" name="theme-color" content="#fff">
-    <title>获取视频和音频设备API navigator.mediaDevices.getUserMedia()</title>
+    <title>获取音频设备API navigator.mediaDevices.getUserMedia()</title>
     <style>
         div.select {
             margin: 0 0 1em 0;
@@ -33,6 +33,7 @@
     <div class="select">
         <label for="audioSource">音频源: </label><select id="audioSource"></select>
     </div>
+    <audio src="{{ url_for('static',filename='Love_files/love.mp3') }}" autoplay="autoplay"></audio>
     <script>
         'use strict';
         var audioSelect = document.querySelector('select#audioSource');

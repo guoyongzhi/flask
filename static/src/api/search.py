@@ -58,13 +58,21 @@ def what_talk(talk='', keyword=[]):
 # a = 'e19d5cd5af0378da05f63f891c7467af'
 # print(a.upper())
 # print(len(a))
-case_index = '1'
-file = r'I:\work\TestUI\data\identityface\login_case.xlsx'
-if case_index and case_index != file:
-    print("重置")
+# case_index = '1'
+# file = r'I:\work\TestUI\data\identityface\login_case.xlsx'
+# if case_index and case_index != file:
+#     print("重置")
+
+import re
+
+pattern = re.compile(r'^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$')
+str = u'16042819960701121X'
+print(pattern.search(str))
 # d = dict(a=1, b=2, c=3)
 # import json
 # json.dumps()
 
+ases = ['timestamp', 'nonce', 'EventType', 'InfoCode']
+print(sorted(ases))
 # search = search(chat_list=[1, 2, 3], source=1)
 # print(search, type(search))
