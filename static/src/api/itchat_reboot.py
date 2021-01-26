@@ -35,14 +35,10 @@ def text_reply(msg):  # 处理私人消息
     talk = msg.text
     fromUserName = msg['FromUserName']
     try:
-        name = msg['User']['RemarkName']
-        if not name:
-            name = msg['User']['NickName']
+        name = msg['User']['RemarkName'] if not msg['User']['RemarkName'] else msg['User']['NickName']
     except Exception:
-        name = msg['RecommendInfo']['UserName']
-        # print(name, fromUserName)
-        if not name:  # 当没有备注时取微信名称
-            name = msg['RecommendInfo']['NickName']
+        name = msg['RecommendInfo']['UserName'] if not msg['RecommendInfo']['UserName'] else \
+            msg['RecommendInfo']['NickName']
     # print(name, talk)
     if name == At_who:
         if talk[:1] == '@' or talk[:1] == 'T':
@@ -132,7 +128,6 @@ def text_reply(msg):  # 处理私人消息
     elif '设置转发' == talk[:4]:
         At_who = talk[4:]
     elif '重载' in talk:
-        # itchat.logout()
         itchat.auto_login(hotReload=True, enableCmdQR=True)
         return 'OK'
     elif name in user_idiom_list:
