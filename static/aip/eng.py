@@ -14,6 +14,11 @@ except ImportError:
 
 
 def char_to_wav(theText='你说什么呢?'):
+    """
+    利用原生语音合成
+    :param theText:
+    :return:
+    """
     filename = str(int(time.time()))
     outfile = filename + "-audio.wav"
     stream.Open(outfile, SpeechLib.SSFMCreateForWrite)
@@ -21,6 +26,7 @@ def char_to_wav(theText='你说什么呢?'):
     # theText = '你说什么呢'
     engine.speak(theText)
     stream.Close()
+    return outfile
 
 
 if __name__ == '__main__':

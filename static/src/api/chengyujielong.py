@@ -1,8 +1,8 @@
-from IPython.core.interactiveshell import InteractiveShell
+# from IPython.core.interactiveshell import InteractiveShell
 from pypinyin import pinyin, lazy_pinyin, Style
 import random
 
-InteractiveShell.ast_node_interactivity = "all"
+# InteractiveShell.ast_node_interactivity = "all"
 
 idiom_dic = {}
 idiom_list = []

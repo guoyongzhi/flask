@@ -957,7 +957,7 @@ def Group_reply(msg):
     elif qname in qun_list:
         return robot_chat(talk, qun_dict, welcome)
     elif qname in ana_list:
-        a = read_name_all_info(r'I:\work\flask\static\src\api\count').run()
+        a = read_name_all_info(r'count').run()
         return a.split()[0]
     else:
         if len(talk) == 4:  # 输入成语直接开始成语接龙
