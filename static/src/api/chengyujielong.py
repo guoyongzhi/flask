@@ -1,14 +1,15 @@
 # from IPython.core.interactiveshell import InteractiveShell
 from pypinyin import pinyin, lazy_pinyin, Style
+import os
 import random
 
 # InteractiveShell.ast_node_interactivity = "all"
-
+print(os.getcwd())
 idiom_dic = {}
 idiom_list = []
 idiom_char_dic = {}
 
-with open('coal_dict.txt', 'r', encoding='utf8') as r:
+with open(r'G:\Python\flask\static\src\api\coal_dict.txt', 'r', encoding='utf8') as r:
     for line in r:
         line = line.strip()
         if line is None or line == '':

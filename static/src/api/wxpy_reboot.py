@@ -1010,7 +1010,7 @@ def set_info():
 def get_info():
     global qun_list, user_list, game_dict, user_idiom_list, red_packet_list, idiom_list, this_num, ana_list,\
         sign_in_list, pai, idiom_dict, users_list
-    with open('config.txt', 'r', encoding='utf-8') as file:
+    with open(r'G:\Python\flask\static\src\api\config.txt', 'r', encoding='utf-8') as file:
         a_list = []
         aa = file.readlines()
         for a in aa:

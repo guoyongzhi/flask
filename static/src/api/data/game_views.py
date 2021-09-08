@@ -1,7 +1,7 @@
 import sqlite3
 import setting
 from static.src.api.data.gime_table import *
-import numpy as np
+# import numpy as np
 from static.src.api.config.get_game_config import *
 
 
@@ -42,7 +42,7 @@ class Users:
 
 class execute_sql_lite(object):
     def __init__(self):
-        database = r'data\games.db'
+        database = r'G:\Python\flask\static\src\api\data\games.db'
         if os.path.exists(database):
             self.db = database
         else:
@@ -129,29 +129,29 @@ class execute_sql_lite(object):
         return self.select_run(sql, args)
 
 
-def Boss_challenge(Boss_blood, number, total_force):
-    cut_result = total_force * (number + 8)
-    print(cut_result)
-    if cut_result > Boss_blood:
-        win_rate = 1
-    else:
-        print(cut_result / Boss_blood)
-        if cut_result / Boss_blood <= 0.5:
-            win_rate = 0.39
-        elif cut_result / Boss_blood <= 0.6:
-            win_rate = 0.59
-        elif cut_result / Boss_blood <= 0.7:
-            win_rate = 0.69
-        elif cut_result / Boss_blood <= 0.8:
-            win_rate = 0.79
-        elif cut_result / Boss_blood <= 0.9:
-            win_rate = 0.89
-        else:
-            win_rate = 0.95
-    win_rate_p = np.array([1 - win_rate, win_rate])
-    result_index = np.random.choice([0, 1], p=win_rate_p.ravel())
-    print(result_index)
-    return result_index
+# def Boss_challenge(Boss_blood, number, total_force):
+#     cut_result = total_force * (number + 8)
+#     print(cut_result)
+#     if cut_result > Boss_blood:
+#         win_rate = 1
+#     else:
+#         print(cut_result / Boss_blood)
+#         if cut_result / Boss_blood <= 0.5:
+#             win_rate = 0.39
+#         elif cut_result / Boss_blood <= 0.6:
+#             win_rate = 0.59
+#         elif cut_result / Boss_blood <= 0.7:
+#             win_rate = 0.69
+#         elif cut_result / Boss_blood <= 0.8:
+#             win_rate = 0.79
+#         elif cut_result / Boss_blood <= 0.9:
+#             win_rate = 0.89
+#         else:
+#             win_rate = 0.95
+#     win_rate_p = np.array([1 - win_rate, win_rate])
+#     result_index = np.random.choice([0, 1], p=win_rate_p.ravel())
+#     print(result_index)
+#     return result_index
 
 
 def Boss_prop_drop(Boss_name, number, total_prop):
