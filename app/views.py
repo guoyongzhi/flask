@@ -489,11 +489,12 @@ def echo_websocket():
     global return_time
     if request.environ.get('wsgi.websocket'):
         user_socket = request.environ['wsgi.websocket']
+        receive_log = logger.logs("receive")
         if user_socket is None:
             os.abort(404)
-        print(request.headers)
+        receive_log.info(request.headers)
         connection_list['connection' + str(i)] = user_socket
-        print("新连接", user_socket, 'connection' + str(i))
+        receive_log.info("新连接" + str(user_socket) + 'connection' + str(i))
         while True:
             try:
                 if user_socket.closed:
@@ -543,7 +544,6 @@ def echo_websocket():
                     loop_time = time.gmtime(time.mktime(new_time) - time.mktime(old_time))
                     if not receive_message:
                         receive_message = mm
-                    if not receive_message:
                         continue
                     elif receive_message:
                         if receive_message == "quit":
@@ -554,29 +554,46 @@ def echo_websocket():
                             break
                         else:
                             try:
-                                json_str = json.loads(receive_message)
-                                str_sign = "EventType=" + json_str['EventType'] + "InfoCode=" + json_str["InfoCode"] +\
-                                           "nonce=" + json_str['nonce'] + "timestamp=" + json_str["timestamp"] + \
-                                           apiSecret
-                                encrypts = get_str_sha1_secret_str(str_sign)
-                                if encrypts != json_str['sign']:
-                                    print("签名错误，，不做处理")
+                                try:
+                                    json_str = json.loads(receive_message)
+                                except Exception as e:
+                                    receive_log.error(e)
+                                    g_code_length = 0
+                                    length_buffer = 0
+                                    buffer_utf8 = b""
+                                    continue
+                                try:
+                                    str_sign = "EventType=" + json_str['EventType'] + "InfoCode=" + json_str["InfoCode"] +\
+                                               "nonce=" + json_str['nonce'] + "timestamp=" + json_str["timestamp"] + \
+                                               apiSecret
+                                    encrypts = get_str_sha1_secret_str(str_sign)
+                                    if encrypts != json_str['sign']:
+                                        receive_log.info("签名错误，，不做处理")
+                                        g_code_length = 0
+                                        length_buffer = 0
+                                        buffer_utf8 = b""
+                                        continue
+                                except Exception:
+                                    receive_log.info("数据错误，，不做处理")
+                                    g_code_length = 0
+                                    length_buffer = 0
+                                    buffer_utf8 = b""
                                     continue
                                 if json_str['EventType'] != 0 and json_str['EventType'] != 1:
                                     if json_str['EventType'] == 1005 or json_str['EventType'] == 3006:
-                                        receive_log = logger.logs("receive")
+                                        
                                         receive_log.info(str(json_str))
                                     else:
-                                        print(nowTime, receive_message)
+                                        receive_log.info(nowTime, receive_message)
                                 else:
                                     if return_time:
                                         sendMessage(receive_message)
                                         if int(loop_time.tm_sec) >= 6:
                                             if json_str['EventType'] == 1:
-                                                print("收到并已回复心跳：", nowTime, receive_message)
+                                                receive_log.info("收到并已回复心跳：" + nowTime + str(receive_message))
                                                 return_time = nowTime
                                         if json_str['InfoCode'] is not None:
-                                            print(nowTime, str(json_str))
+                                            receive_log.info(nowTime + str(json_str))
                             except Exception as e:
                                 if 'Socket is dead' in str(e):
                                     delete_connection(str(i))
@@ -592,14 +609,13 @@ def echo_websocket():
                                             delete_connection(str(i))
                                             break
                                     if int(loop_time.tm_sec) >= 30:
-                                        print("收到心跳并已回复" + nowTime)
+                                        receive_log.info("收到心跳并已回复" + nowTime)
                                         return_time = nowTime
-                                    continue
                 g_code_length = 0
                 length_buffer = 0
                 buffer_utf8 = b""
             except Exception as e:
-                print(e)
+                receive_log.error(e)
                 break
         i += 1
     return jsonify("再见")

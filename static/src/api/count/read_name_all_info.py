@@ -39,8 +39,11 @@ class read_name_all_info(object):
             with open(name, mode='r', encoding='GBK') as f:
                 content = f.readlines()
         except UnicodeDecodeError:
-            with open(name, mode='r', encoding='utf-8') as f:
-                content = f.readlines()
+            try:
+                with open(name, mode='r', encoding='utf-8') as f:
+                    content = f.readlines()
+            except Exception:
+                return None
         return content
     
     

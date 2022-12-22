@@ -65,14 +65,29 @@ def what_talk(talk='', keyword=[]):
 
 import re
 
-pattern = re.compile(r'^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$')
-str = u'16042819960701121X'
-print(pattern.search(str))
+# pattern = re.compile(r'^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$')
+# str = u'16042819960701121X'
+# print(pattern.search(str))
 # d = dict(a=1, b=2, c=3)
 # import json
 # json.dumps()
 
-ases = ['timestamp', 'nonce', 'EventType', 'InfoCode']
-print(sorted(ases))
+# ases = ['timestamp', 'nonce', 'EventType', 'InfoCode']
+# print(sorted(ases))
+# ases.remove('timestamp')
+# print(ases)
 # search = search(chat_list=[1, 2, 3], source=1)
 # print(search, type(search))
+import time
+import datetime
+now = datetime.datetime.now()
+nowdate = datetime.datetime.strptime('1970-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+print(now)
+res = now - nowdate
+print(res, type(res))
+print(int(res.total_seconds()))
+
+import requests
+
+while True:
+    res = requests.get("")

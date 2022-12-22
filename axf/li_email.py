@@ -9,12 +9,12 @@ from email.mime.multipart import MIMEMultipart
 def get_mail(title, content, recipients):     # 不带附件邮件
     my_sender = 'guodisgao@foxmail.com'  # 发件人邮箱账号
     my_pass = 'sqbeggtyhkrdceba'  # 发件人邮箱密码/授权码
-    my_user = recipients  # 收件人邮箱账号，我这边发送给自己
+    my_user = recipients  # 收件人邮箱账号
     res = True
     try:
         msg = MIMEText(content, 'plain', 'utf-8')  # 正文
         msg['From'] = formataddr([my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-        msg['To'] = formataddr(["FK", my_user])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+        msg['To'] = formataddr(["TT", my_user])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
         msg['Subject'] = title  # 邮件的主题，也可以说是标题
 
         server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
@@ -23,10 +23,7 @@ def get_mail(title, content, recipients):     # 不带附件邮件
         server.quit()  # 关闭连接
     except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 res=False
         res = False
-    if res:
-        print("邮件发送成功")
-    else:
-        print("邮件发送失败")
+    return res
 
 
 def send_email(title, content, recipients, accessory):     # 带附件
